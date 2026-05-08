@@ -40,7 +40,7 @@
     <#Include Label="DegreeMatrix">
     <#Include Label="LaplacianMatrix">
   </Section>
-  
+
   <Section><Heading>Orders</Heading>
     <#Include Label="PartialOrderDigraphMeetOfVertices">
     <#Include Label="NonUpperSemimodularPair">
@@ -61,6 +61,7 @@
     <#Include Label="DigraphStronglyConnectedComponent">
     <#Include Label="DigraphBicomponents">
     <#Include Label="ArticulationPoints">
+    <#Include Label="MinimalCyclicEdgeCut">
     <#Include Label="Bridges">
     <#Include Label="StrongOrientation">
     <#Include Label="DigraphPeriod">
@@ -87,7 +88,10 @@
     <#Include Label="HamiltonianPath">
     <#Include Label="NrSpanningTrees">
     <#Include Label="DigraphDijkstra">
+    <#Include Label="DigraphVertexConnectivity">
     <#Include Label="DigraphCycleBasis">
+    <#Include Label="DigraphIsKing">
+    <#Include Label="DigraphKings">
   </Section>
 
   <Section><Heading>Cayley graphs of groups</Heading>

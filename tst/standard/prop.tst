@@ -8,6 +8,11 @@
 ##
 #############################################################################
 ##
+
+#@local D, DigraphNrVertices, DigraphRange, DigraphSource, DigraphVertices, G
+#@local M3, M5, N5, adj, circuit, complete100, comps, g, g1, g2, g3, g4, g5, g6
+#@local gr, gr1, gr2, gr3, gr4, gr5, gr6, grid, i, id, j, loop, mat, multiple
+#@local mut, nottrans, r, range, source, trans
 gap> START_TEST("Digraphs package: standard/prop.tst");
 gap> LoadPackage("digraphs", false);;
 
@@ -186,6 +191,14 @@ fail
 gap> HasIsAcyclicDigraph(gr);
 false
 gap> IsAcyclicDigraph(gr);
+false
+gap> IsAcyclicDigraph(Digraph([[2 .. 3], [], []]));
+true
+gap> IsAcyclicDigraph(Digraph([[2 .. 4], [], [], []]));
+true
+gap> IsAcyclicDigraph(Digraph([[1 .. 3], [1 .. 3], [1 .. 3]]));
+false
+gap> IsAcyclicDigraph(Digraph([[2 .. 4], [1 .. 4], [1 .. 4], [1 .. 2]]));
 false
 
 #  IsFunctionalDigraph
@@ -965,67 +978,117 @@ gap> D := Digraph(IsImmutableDigraph, [[2], [1, 3], [2, 4], [3]]);
 gap> IsCompleteMultipartiteDigraph(D);
 false
 
-#  IsDirectedTree
+#  IsDirectedTree and IsDirectedForest
 gap> g := Digraph([]);
 <immutable empty digraph with 0 vertices>
 gap> IsDirectedTree(g);
+false
+gap> IsDirectedForest(g);
 false
 gap> g := Digraph([[]]);
 <immutable empty digraph with 1 vertex>
 gap> IsDirectedTree(g);
 true
+gap> IsDirectedForest(g);
+true
 gap> g := Digraph([[], []]);
 <immutable empty digraph with 2 vertices>
 gap> IsDirectedTree(g);
 false
+gap> IsDirectedForest(g);
+true
 gap> g := Digraph([[1]]);
 <immutable digraph with 1 vertex, 1 edge>
 gap> IsDirectedTree(g);
+false
+gap> IsDirectedForest(g);
 false
 gap> g := Digraph([[2, 2], []]);
 <immutable multidigraph with 2 vertices, 2 edges>
 gap> IsDirectedTree(g);
 false
+gap> IsDirectedForest(g);
+false
 gap> g := Digraph([[], [2]]);
 <immutable digraph with 2 vertices, 1 edge>
 gap> IsDirectedTree(g);
+false
+gap> IsDirectedForest(g);
 false
 gap> g := Digraph([[2], [1]]);
 <immutable digraph with 2 vertices, 2 edges>
 gap> IsDirectedTree(g);
 false
+gap> IsDirectedForest(g);
+false
 gap> g := Digraph([[3], [3], []]);
 <immutable digraph with 3 vertices, 2 edges>
 gap> IsDirectedTree(g);
+false
+gap> IsDirectedForest(g);
 false
 gap> g := Digraph([[2], [3], []]);
 <immutable digraph with 3 vertices, 2 edges>
 gap> IsDirectedTree(g);
 true
+gap> IsDirectedForest(g);
+true
 gap> g := Digraph([[2], [3], [], []]);
 <immutable digraph with 4 vertices, 2 edges>
 gap> IsDirectedTree(g);
+false
+gap> IsDirectedForest(g);
 false
 gap> g := Digraph([[2, 3], [6], [4, 5], [], [], []]);
 <immutable digraph with 6 vertices, 5 edges>
 gap> IsDirectedTree(g);
 true
+gap> IsDirectedForest(g);
+true
 gap> g := Digraph([[2, 3], [6], [4, 5], [], [], [], []]);
 <immutable digraph with 7 vertices, 5 edges>
 gap> IsDirectedTree(g);
+false
+gap> IsDirectedForest(g);
 false
 gap> g := Digraph([[2, 3], [6], [4, 5], [7], [], [7], []]);
 <immutable digraph with 7 vertices, 7 edges>
 gap> IsDirectedTree(g);
 false
+gap> IsDirectedForest(g);
+false
 gap> g := Digraph([[2, 3], [1, 3], [1, 2]]);
 <immutable digraph with 3 vertices, 6 edges>
 gap> IsDirectedTree(g);
+false
+gap> IsDirectedForest(g);
 false
 gap> g := Digraph([[2, 3, 4], [1, 3, 4], [1, 2, 4], [1, 2, 3]]);
 <immutable digraph with 4 vertices, 12 edges>
 gap> IsDirectedTree(g);
 false
+gap> IsDirectedForest(g);
+false
+gap> IsDirectedTree(EmptyDigraph(0));
+false
+gap> IsDirectedForest(EmptyDigraph(0));
+false
+gap> IsDirectedTree(EmptyDigraph(1));
+true
+gap> IsDirectedForest(EmptyDigraph(1));
+true
+gap> IsDirectedTree(EmptyDigraph(2));
+false
+gap> IsDirectedForest(EmptyDigraph(2));
+true
+gap> D := DigraphFromDiSparse6String(".P_eAgCkJnF`pb@dCh@ekHeemg");
+<immutable digraph with 17 vertices, 15 edges>
+gap> IsDirectedTree(D);
+false
+gap> IsDirectedForest(D);
+true
+gap> D;
+<immutable directed forest with 17 vertices, 2 components>
 
 #  IsUndirectedTree
 gap> g := Digraph([]);
@@ -1211,6 +1274,69 @@ false
 gap> g;
 <mutable empty digraph with 10 vertices>
 
+# IsCograph
+gap> g := DigraphByEdges([[1, 2], [2, 3]]);
+<immutable digraph with 3 vertices, 2 edges>
+gap> IsCograph(g);
+Error, IsCograph: argument must be a symmetric digraph
+gap> g := DigraphByEdges([[1, 2], [2, 1], [1, 1]]);
+<immutable digraph with 2 vertices, 3 edges>
+gap> IsCograph(g);
+Error, IsCograph: argument must be a digraph without loops
+gap> g := DigraphByEdges([[1, 2], [1, 2], [2, 1], [2, 1]]);
+<immutable multidigraph with 2 vertices, 4 edges>
+gap> IsCograph(g);
+Error, IsCograph: argument must be a digraph without multiple edges
+gap> g := Digraph([]);
+<immutable empty digraph with 0 vertices>
+gap> IsCograph(g);
+true
+gap> g := Digraph([[]]);
+<immutable empty digraph with 1 vertex>
+gap> IsCograph(g);
+true
+gap> g := EmptyDigraph(10);
+<immutable empty digraph with 10 vertices>
+gap> IsCograph(g);
+true
+gap> g := DigraphRemoveLoops(CompleteDigraph(10));
+<immutable digraph with 10 vertices, 90 edges>
+gap> IsCograph(g);
+true
+gap> g := DigraphRemoveLoops(DigraphSymmetricClosure(CycleDigraph(4)));
+<immutable digraph with 4 vertices, 8 edges>
+gap> IsCograph(g);
+true
+gap> g := DigraphRemoveLoops(DigraphSymmetricClosure(CycleDigraph(5)));
+<immutable digraph with 5 vertices, 10 edges>
+gap> IsCograph(g);
+false
+gap> g := DigraphSymmetricClosure(DigraphByEdges([[1, 2], [2, 3], [3, 4]]));
+<immutable symmetric digraph with 4 vertices, 6 edges>
+gap> IsCograph(g);
+false
+gap> g := DigraphFromGraph6String("HtilDEa");
+<immutable symmetric digraph with 9 vertices, 34 edges>
+gap> IsCograph(g);
+true
+gap> g := DigraphFromGraph6String("K~zf~z|~Vy~i");
+<immutable symmetric digraph with 12 vertices, 108 edges>
+gap> IsCograph(g);
+true
+gap> D := DigraphFromGraph6String("L~~v~z|~Vz~m~[");
+<immutable symmetric digraph with 13 vertices, 134 edges>
+gap> IsCograph(D);
+true
+gap> D := DigraphFromGraph6String("L~~vffr{~f}[{x");
+<immutable symmetric digraph with 13 vertices, 118 edges>
+gap> IsCograph(D);
+true
+gap> mut := DigraphMutableCopy(D);;
+gap> IsCograph(mut);
+true
+gap> mut = D;
+true
+
 # IsJoinSemilatticeDigraph, IsMeetSemilatticeDigraph, and IsLatticeDigraph
 gap> gr := Digraph([[1, 2], [2]]);
 <immutable digraph with 2 vertices, 3 edges>
@@ -1220,6 +1346,10 @@ gap> IsJoinSemilatticeDigraph(gr);
 true
 gap> IsLatticeDigraph(gr);
 true
+gap> IsPlanarDigraph(gr);
+true
+gap> gr;
+<immutable planar lattice digraph with 2 vertices, 3 edges>
 gap> gr := CycleDigraph(5);
 <immutable cycle digraph with 5 vertices>
 gap> IsMeetSemilatticeDigraph(gr);
@@ -1552,7 +1682,7 @@ gap> g := CompleteMultipartiteDigraph([1, 1, 2, 3, 5, 8, 13, 21, 34]);
 gap> IsHamiltonianDigraph(g);
 true
 gap> g := CompleteBipartiteDigraph(50, 50);
-<immutable complete bipartite digraph with bicomponent sizes 50 and 50>
+<immutable complete bipartite digraph with bicomponents of size 50>
 gap> IsHamiltonianDigraph(g);
 true
 gap> g := CompleteMultipartiteDigraph([1, 15, 1, 1, 1, 1, 1, 1]);
@@ -1600,7 +1730,7 @@ gap> D := JohnsonDigraph(8, 3);
 gap> IsDigraphCore(D);
 true
 gap> D := CompleteBipartiteDigraph(500, 500);
-<immutable complete bipartite digraph with bicomponent sizes 500 and 500>
+<immutable complete bipartite digraph with bicomponents of size 500>
 gap> IsDigraphCore(D);
 false
 gap> D := PetersenGraph();
@@ -1679,22 +1809,22 @@ true
 gap> IsEdgeTransitive(Digraph([[2], [3, 3, 3], []]));
 Error, the argument <D> must be a digraph with no multiple edges,
 
-# IsTwoEdgeTransitive
-gap> IsTwoEdgeTransitive(DigraphByEdges([[1, 2], [2, 3], [3, 1]]));
+# Is2EdgeTransitive
+gap> Is2EdgeTransitive(DigraphByEdges([[1, 2], [2, 3], [3, 1]]));
 true
-gap> IsTwoEdgeTransitive(DigraphByEdges([[1, 2], [2, 3], [3, 1], [3, 4]]));
+gap> Is2EdgeTransitive(DigraphByEdges([[1, 2], [2, 3], [3, 1], [3, 4]]));
 false
-gap> IsTwoEdgeTransitive(CompleteDigraph(4));
+gap> Is2EdgeTransitive(CompleteDigraph(4));
 true
-gap> IsTwoEdgeTransitive(CycleDigraph(100));
+gap> Is2EdgeTransitive(CycleDigraph(100));
 true
-gap> IsTwoEdgeTransitive(CompleteBipartiteDigraph(11, 23));
+gap> Is2EdgeTransitive(CompleteBipartiteDigraph(11, 23));
 false
-gap> IsTwoEdgeTransitive(DigraphByEdges([[1, 2]]));
+gap> Is2EdgeTransitive(DigraphByEdges([[1, 2]]));
 true
-gap> IsTwoEdgeTransitive(DigraphByEdges([]));
+gap> Is2EdgeTransitive(DigraphByEdges([]));
 true
-gap> IsTwoEdgeTransitive(Digraph([[2], [3, 3, 3], []]));
+gap> Is2EdgeTransitive(Digraph([[2], [3, 3, 3], []]));
 Error, the argument <D> must be a digraph with no multiple edges,
 
 # DigraphHasNoVertices and DigraphHasAVertex
@@ -1909,40 +2039,6 @@ gap> D := Digraph([[2], [1, 3, 4], [2], [2], [6], [5]]);;
 gap> SetIsUndirectedForest(D, true);
 gap> HasIsMultiDigraph(D) and not IsMultiDigraph(D);
 true
-
-#  DIGRAPHS_UnbindVariables
-gap> Unbind(D);
-gap> Unbind(G);
-gap> Unbind(M5);
-gap> Unbind(N5);
-gap> Unbind(adj);
-gap> Unbind(circuit);
-gap> Unbind(complete100);
-gap> Unbind(g);
-gap> Unbind(g1);
-gap> Unbind(g2);
-gap> Unbind(g3);
-gap> Unbind(g4);
-gap> Unbind(g5);
-gap> Unbind(g6);
-gap> Unbind(gr);
-gap> Unbind(gr1);
-gap> Unbind(gr2);
-gap> Unbind(gr3);
-gap> Unbind(gr4);
-gap> Unbind(gr5);
-gap> Unbind(gr6);
-gap> Unbind(grid);
-gap> Unbind(i);
-gap> Unbind(j);
-gap> Unbind(loop);
-gap> Unbind(mat);
-gap> Unbind(multiple);
-gap> Unbind(nottrans);
-gap> Unbind(r);
-gap> Unbind(range);
-gap> Unbind(source);
-gap> Unbind(trans);
 
 #
 gap> DIGRAPHS_StopTest();

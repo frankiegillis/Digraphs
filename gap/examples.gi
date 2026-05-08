@@ -68,16 +68,25 @@ InstallMethod(CompleteBipartiteDigraphCons,
 [IsImmutableDigraph, IsPosInt, IsPosInt],
 function(_, m, n)
   local D, aut;
+
+  if Maximum(m, n) = 1 then
+    return CompleteDigraph(IsImmutableDigraph, 2);
+  fi;
+
   D := MakeImmutable(CompleteBipartiteDigraph(IsMutableDigraph, m, n));
   SetIsSymmetricDigraph(D, true);
   SetDigraphNrEdges(D, 2 * m * n);
   SetIsCompleteBipartiteDigraph(D, true);
   if m = n then
-    aut := WreathProduct(SymmetricGroup(m), Group((1, 2)));
+    aut := WreathProduct(SymmetricGroup([1 .. m]), Group((1, m + 1)));
+  elif m = 1 then
+    aut := SymmetricGroup([2 .. n + 1]);
   else
-    aut := DirectProduct(SymmetricGroup(m), SymmetricGroup(n));
+    aut := DirectProduct(SymmetricGroup([1 .. m]),
+                         SymmetricGroup([m + 1 .. m + n]));
   fi;
   SetAutomorphismGroup(D, aut);
+  SetIsPlanarDigraph(D, m <= 2 or n <= 2);
   return D;
 end);
 
@@ -216,6 +225,7 @@ function(_, n)
   SetIsCompleteBipartiteDigraph(D, n = 2);
   SetIsCompleteMultipartiteDigraph(D, n > 1);
   SetAutomorphismGroup(D, SymmetricGroup(n));
+  SetIsPlanarDigraph(D, n <= 4);
   return D;
 end);
 
@@ -286,6 +296,9 @@ function(_, n, k)
   D := MakeImmutable(JohnsonDigraphCons(IsMutableDigraph, n, k));
   SetIsMultiDigraph(D, false);
   SetIsSymmetricDigraph(D, true);
+  if k <= n then
+    SetDigraphVertexConnectivity(D, (n - k) * k);
+  fi;
   return D;
 end);
 
@@ -1101,8 +1114,7 @@ function(_, n, par)
     ErrorNoReturn("arguments must be an integer <n> greater ",
                   "than 1 and a list of integers between 1 and n,");
   fi;
-  D := Digraph(IsMutableDigraph, []);
-  DigraphAddVertices(D, n);
+  D := EmptyDigraph(IsMutableDigraph, n);
   for i in [1 .. n] do
     for j in par do
       if (i - j) mod n = 0 then
@@ -1128,11 +1140,14 @@ function(_, n, par)
   D := MakeImmutable(CirculantGraphCons(IsMutableDigraph, n, par));
   SetIsMultiDigraph(D, false);
   SetIsSymmetricDigraph(D, true);
-  SetIsUndirectedTree(D, false);
-  SetIsRegularDigraph(D, true);
   SetIsVertexTransitive(D, true);
-  SetIsHamiltonianDigraph(D, true);
-  SetIsBiconnectedDigraph(D, true);
+  SetIsUndirectedTree(D, false);
+  SetIsUndirectedForest(D, IsEmpty(par) or
+                           (IsEvenInt(n) and Unique(par) = [n / 2]));
+  if Gcd(Concatenation([n], par)) = 1 then
+    SetIsHamiltonianDigraph(D, true);
+    SetIsBiconnectedDigraph(D, true);
+  fi;
   return D;
 end);
 
@@ -1898,3 +1913,63 @@ InstallMethod(WindmillGraph, "for two integers", [IsPosInt, IsPosInt],
 
 InstallMethod(WindmillGraph, "for a function and two integers",
 [IsFunction, IsPosInt, IsPosInt], WindmillGraphCons);
+
+BindGlobal("DIGRAPHS_PrefixReversalGroup",
+n -> Group(List([2 .. n], i -> PermList([i, i - 1 .. 1])), ()));
+
+InstallMethod(PancakeGraphCons, "for IsMutableDigraph and pos int",
+[IsMutableDigraph, IsPosInt],
+{filt, n} -> CayleyDigraph(IsMutableDigraph, DIGRAPHS_PrefixReversalGroup(n)));
+
+InstallMethod(PancakeGraphCons, "for IsImmutableDigraph and pos int",
+[IsImmutableDigraph, IsPosInt],
+function(_, n)
+  local D;
+  D := CayleyDigraph(IsImmutableDigraph, DIGRAPHS_PrefixReversalGroup(n));
+  SetIsMultiDigraph(D, false);
+  SetIsSymmetricDigraph(D, true);
+  SetIsHamiltonianDigraph(D, true);
+  return D;
+end);
+
+InstallMethod(PancakeGraph, "for a function and pos int",
+[IsFunction, IsPosInt], PancakeGraphCons);
+
+InstallMethod(PancakeGraph, "for a pos int",
+[IsPosInt], n -> PancakeGraphCons(IsImmutableDigraph, n));
+
+BindGlobal("DIGRAPHS_HyperoctahedralGroup",
+function(n)
+  local id, A, i;
+  if n = 1 then
+    return Group(());
+  fi;
+  id := [1 .. 2 * n];
+  A := [];
+  for i in [1 .. n] do
+    id{[1 .. i]} := [i + n, i - 1 + n .. 1 + n];
+    id{[n + 1 .. n + i]} := [i, i - 1 .. 1];
+    Add(A, PermList(id));
+  od;
+  return Group(A);
+end);
+
+InstallMethod(BurntPancakeGraphCons, "for IsMutableDigraph and pos int",
+[IsMutableDigraph, IsPosInt],
+{filt, n} -> CayleyDigraph(IsMutableDigraph, DIGRAPHS_HyperoctahedralGroup(n)));
+
+InstallMethod(BurntPancakeGraphCons, "for IsImmutableDigraph and pos int",
+[IsImmutableDigraph, IsPosInt],
+function(_, n)
+  local D;
+  D := CayleyDigraph(IsImmutableDigraph, DIGRAPHS_HyperoctahedralGroup(n));
+  SetIsMultiDigraph(D, false);
+  SetIsSymmetricDigraph(D, true);
+  return D;
+end);
+
+InstallMethod(BurntPancakeGraph, "for a function and pos int",
+[IsFunction, IsPosInt], BurntPancakeGraphCons);
+
+InstallMethod(BurntPancakeGraph, "for a pos int",
+[IsPosInt], n -> BurntPancakeGraphCons(IsImmutableDigraph, n));

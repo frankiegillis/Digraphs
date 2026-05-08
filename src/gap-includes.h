@@ -25,6 +25,6 @@
 #pragma GCC diagnostic ignored "-Winline"
 #endif
 // GAP headers
-#include "compiled.h"  // for Obj, Int
-
-#endif  // DIGRAPHS_SRC_GAP_INCLUDES_H_
+#include "gap_all.h"  // for Obj, Int
+                      //
+#endif                // DIGRAPHS_SRC_GAP_INCLUDES_H_

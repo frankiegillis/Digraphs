@@ -1,4 +1,3 @@
-
 #############################################################################
 ##
 #W  standard/weights.tst
@@ -10,25 +9,30 @@
 #############################################################################
 ##
 
+#@local D, d, distances, edges, gr, m, parents, path, r, tree
 gap> START_TEST("Digraphs package: standard/weights.tst");
 gap> LoadPackage("digraphs", false);;
 
 #
 gap> DIGRAPHS_StartTest();
-gap> d := EdgeWeightedDigraph([[2], []], [[5], []]);
-<immutable digraph with 2 vertices, 1 edge>
 
-# create edge weighted digraph
+#############################################################################
+# 1. Edge Weights
+#############################################################################
+
+# create edge-weighted digraph
+gap> d := EdgeWeightedDigraph([[2], []], [[5], []]);
+<immutable edge-weighted digraph with 2 vertices, 1 edge>
 gap> d := EdgeWeightedDigraph(Digraph([[2], []]), [[5], []]);
-<immutable digraph with 2 vertices, 1 edge>
+<immutable edge-weighted digraph with 2 vertices, 1 edge>
 gap> EdgeWeightedDigraphTotalWeight(d);
 5
 
 # weight not valid
 gap> d := EdgeWeightedDigraph([[2], []], [["a"], []]);
-Error, out neighbour weight must be an integer, float or rational,
+Error, out-neighbour weights must be integers, floats, or rationals,
 
-# check all elements of out neighbours are list
+# check all elements of out-neighbours are list
 gap> d := EdgeWeightedDigraph(["a", []], [[5], []]);
 Error, the argument <list> must be a list of lists of positive integers not ex\
 ceeding the length of the argument,
@@ -49,19 +53,25 @@ ceeding the length of the argument,
 
 # incorrect digraph and weights
 gap> d := EdgeWeightedDigraph([[2], []], [[5]]);
-Error, the number of out neighbours and weights must be equal,
+Error, the number of out-neighbours and weights must be equal,
 
 # incorrect digraph and weights
 gap> d := EdgeWeightedDigraph([[2, 2], []], [[5], []]);
-Error, the sizes of the out neighbours and weights for vertex 1 must be equal,
+Error, the number of out-neighbours and weights for the vertex 1 must be equal\
+,
 
 # incorrect digraph and weights
 gap> d := EdgeWeightedDigraph([[2], []], [[5, 10], []]);
-Error, the sizes of the out neighbours and weights for vertex 1 must be equal,
+Error, the number of out-neighbours and weights for the vertex 1 must be equal\
+,
+
+#############################################################################
+# 2. Copies of edge weights
+#############################################################################
 
 # changing edge weights mutable copy
 gap> d := EdgeWeightedDigraph([[2], [1]], [[5], [10]]);
-<immutable digraph with 2 vertices, 2 edges>
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
 gap> m := EdgeWeightsMutableCopy(d);
 [ [ 5 ], [ 10 ] ]
 gap> m[1] := [25];
@@ -79,63 +89,71 @@ Error, List Assignment: <list> must be a mutable list
 
 # negative edge weights
 gap> d := EdgeWeightedDigraph([[2], [1]], [[5], [10]]);
-<immutable digraph with 2 vertices, 2 edges>
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
 gap> IsNegativeEdgeWeightedDigraph(d);
 false
 gap> d := EdgeWeightedDigraph([[2], [1]], [[-5], [10]]);
-<immutable digraph with 2 vertices, 2 edges>
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
 gap> IsNegativeEdgeWeightedDigraph(d);
 true
 
+#############################################################################
+# 3. Minimum Spanning Trees
+#############################################################################
+
 # not connnected digraph
 gap> d := EdgeWeightedDigraph([[1], [2]], [[5], [10]]);
-<immutable digraph with 2 vertices, 2 edges>
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
 gap> EdgeWeightedDigraphMinimumSpanningTree(d);
-Error, the argument <digraph> must be a connected digraph,
+Error, the argument <D> must be a connected digraph,
 
 # digraph with one node
 gap> d := EdgeWeightedDigraph([[]], [[]]);
-<immutable empty digraph with 1 vertex>
+<immutable empty edge-weighted digraph with 1 vertex>
 gap> tree := EdgeWeightedDigraphMinimumSpanningTree(d);
-<immutable empty digraph with 1 vertex>
+<immutable empty edge-weighted digraph with 1 vertex>
 gap> EdgeWeightedDigraphTotalWeight(tree);
 0
 
 # digraph with loop
 gap> d := EdgeWeightedDigraph([[1]], [[5]]);
-<immutable digraph with 1 vertex, 1 edge>
+<immutable edge-weighted digraph with 1 vertex, 1 edge>
 gap> EdgeWeightedDigraphMinimumSpanningTree(d);
-<immutable empty digraph with 1 vertex>
+<immutable empty edge-weighted digraph with 1 vertex>
 
 # digraph with cycle
 gap> d := EdgeWeightedDigraph([[2], [3], [1]], [[5], [10], [15]]);
-<immutable digraph with 3 vertices, 3 edges>
+<immutable edge-weighted digraph with 3 vertices, 3 edges>
 gap> tree := EdgeWeightedDigraphMinimumSpanningTree(d);
-<immutable digraph with 3 vertices, 2 edges>
+<immutable edge-weighted digraph with 3 vertices, 2 edges>
 gap> EdgeWeightedDigraphTotalWeight(tree);
 15
 
 # digraph with negative edge
 gap> d := EdgeWeightedDigraph([[2], []], [[-5], []]);
-<immutable digraph with 2 vertices, 1 edge>
+<immutable edge-weighted digraph with 2 vertices, 1 edge>
 gap> EdgeWeightedDigraphMinimumSpanningTree(d);
-<immutable digraph with 2 vertices, 1 edge>
+<immutable edge-weighted digraph with 2 vertices, 1 edge>
 
 # digraph with negative cycle
 gap> d := EdgeWeightedDigraph([[2], [3], [1]], [[-5], [-10], [-15]]);
-<immutable digraph with 3 vertices, 3 edges>
+<immutable edge-weighted digraph with 3 vertices, 3 edges>
 gap> EdgeWeightedDigraphMinimumSpanningTree(d);
-<immutable digraph with 3 vertices, 2 edges>
+<immutable edge-weighted digraph with 3 vertices, 2 edges>
 
 # digraph with parallel edges
 gap> d := EdgeWeightedDigraph([[2, 2, 2], [1]], [[10, 5, 15], [7]]);
-<immutable multidigraph with 2 vertices, 4 edges>
+<immutable edge-weighted multidigraph with 2 vertices, 4 edges>
 gap> EdgeWeightedDigraphMinimumSpanningTree(d);
-<immutable digraph with 2 vertices, 1 edge>
+<immutable edge-weighted digraph with 2 vertices, 1 edge>
+
+#############################################################################
+# 4. Shortest Path
+#############################################################################
 
 # Shortest paths: one node
 gap> d := EdgeWeightedDigraph([[]], [[]]);
-<immutable empty digraph with 1 vertex>
+<immutable empty edge-weighted digraph with 1 vertex>
 gap> EdgeWeightedDigraphShortestPaths(d, 1);
 rec( distances := [ 0 ], edges := [ fail ], parents := [ fail ] )
 
@@ -147,44 +165,44 @@ rec( distances := [ 0, fail ], edges := [ fail, fail ],
 
 # Shortest paths: one node and loop
 gap> d := EdgeWeightedDigraph([[1]], [[5]]);
-<immutable digraph with 1 vertex, 1 edge>
+<immutable edge-weighted digraph with 1 vertex, 1 edge>
 gap> EdgeWeightedDigraphShortestPaths(d, 1);
 rec( distances := [ 0 ], edges := [ fail ], parents := [ fail ] )
 
 # Shortest paths: two nodes and loop on second node
 gap> d := EdgeWeightedDigraph([[2], [1, 2]], [[5], [5, 5]]);
-<immutable digraph with 2 vertices, 3 edges>
+<immutable edge-weighted digraph with 2 vertices, 3 edges>
 gap> EdgeWeightedDigraphShortestPaths(d, 1);
 rec( distances := [ 0, 5 ], edges := [ fail, 1 ], parents := [ fail, 1 ] )
 
 # Shortest paths: cycle
 gap> d := EdgeWeightedDigraph([[2], [3], [1]], [[2], [3], [4]]);
-<immutable digraph with 3 vertices, 3 edges>
+<immutable edge-weighted digraph with 3 vertices, 3 edges>
 gap> EdgeWeightedDigraphShortestPaths(d, 1);
 rec( distances := [ 0, 2, 5 ], edges := [ fail, 1, 1 ], 
   parents := [ fail, 1, 2 ] )
 
 # Shortest paths: parallel edges
 gap> d := EdgeWeightedDigraph([[2, 2, 2], [1]], [[10, 5, 15], [7]]);
-<immutable multidigraph with 2 vertices, 4 edges>
+<immutable edge-weighted multidigraph with 2 vertices, 4 edges>
 gap> EdgeWeightedDigraphShortestPaths(d, 1);
 rec( distances := [ 0, 5 ], edges := [ fail, 2 ], parents := [ fail, 1 ] )
 
 # Shortest paths: negative edges
 gap> d := EdgeWeightedDigraph([[2], [1]], [[-2], [7]]);
-<immutable digraph with 2 vertices, 2 edges>
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
 gap> EdgeWeightedDigraphShortestPaths(d, 1);
 rec( distances := [ 0, -2 ], edges := [ fail, 1 ], parents := [ fail, 1 ] )
 
 # Shortest paths: parallel negative edges
 gap> d := EdgeWeightedDigraph([[2, 2, 2], [1]], [[-2, -3, -4], [7]]);
-<immutable multidigraph with 2 vertices, 4 edges>
+<immutable edge-weighted multidigraph with 2 vertices, 4 edges>
 gap> EdgeWeightedDigraphShortestPaths(d, 1);
 rec( distances := [ 0, -4 ], edges := [ fail, 3 ], parents := [ fail, 1 ] )
 
 # Shortest paths: negative cycle
 gap> d := EdgeWeightedDigraph([[2, 2, 2], [1]], [[-10, 5, -15], [7]]);
-<immutable multidigraph with 2 vertices, 4 edges>
+<immutable edge-weighted multidigraph with 2 vertices, 4 edges>
 gap> EdgeWeightedDigraphShortestPaths(d, 1);
 Error, no method found! For debugging hints type ?Recovery from NoMethodFound
 Error, no 2nd choice method found for `EdgeWeightedDigraphShortestPaths' on 2 \
@@ -192,19 +210,17 @@ arguments
 
 # Shortest paths: source not in graph
 gap> d := EdgeWeightedDigraph([[2], [1]], [[2], [7]]);
-<immutable digraph with 2 vertices, 2 edges>
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
 gap> EdgeWeightedDigraphShortestPaths(d, 3);
-Error, the 2nd argument <source> must be a vertex of the 1st argument <digraph\
->,
+Error, the 2nd argument <source> must be a vertex of the 1st argument <D>,
 gap> EdgeWeightedDigraphShortestPath(d, 3, 1);
-Error, the 2nd argument <source> must be a vertex of the 1st argument <digraph\
->,
+Error, the 2nd argument <source> must be a vertex of the 1st argument <D>,
 gap> EdgeWeightedDigraphShortestPath(d, 1, 3);
-Error, the 3rd argument <dest> must be a vertex of the 1st argument <digraph>,
+Error, the 3rd argument <dest> must be a vertex of the 1st argument <D>,
 
 # Shortest paths: no path exists
 gap> d := EdgeWeightedDigraph([[1], [2]], [[5], [10]]);
-<immutable digraph with 2 vertices, 2 edges>
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
 gap> EdgeWeightedDigraphShortestPaths(d, 1);
 rec( distances := [ 0, fail ], edges := [ fail, fail ], 
   parents := [ fail, fail ] )
@@ -213,7 +229,7 @@ fail
 
 # Shortest paths: no path exists with negative edge weight
 gap> d := EdgeWeightedDigraph([[2], [2], []], [[-5], [10], []]);
-<immutable digraph with 3 vertices, 2 edges>
+<immutable edge-weighted digraph with 3 vertices, 2 edges>
 gap> r := EdgeWeightedDigraphShortestPaths(d, 1);;
 gap> r.distances = [0, -5, fail];
 true
@@ -224,7 +240,7 @@ true
 
 # Shortest paths: parallel edges
 gap> d := EdgeWeightedDigraph([[2, 2, 2], []], [[3, 2, 1], []]);
-<immutable multidigraph with 2 vertices, 3 edges>
+<immutable edge-weighted multidigraph with 2 vertices, 3 edges>
 gap> EdgeWeightedDigraphShortestPaths(d, 1);
 rec( distances := [ 0, 1 ], edges := [ fail, 3 ], parents := [ fail, 1 ] )
 gap> EdgeWeightedDigraphShortestPaths(d);
@@ -236,7 +252,7 @@ gap> EdgeWeightedDigraphShortestPath(d, 1, 2);
 
 # Shortest paths: negative cycle
 gap> d := EdgeWeightedDigraph([[2], [3], [1]], [[-3], [-5], [-7]]);
-<immutable digraph with 3 vertices, 3 edges>
+<immutable edge-weighted digraph with 3 vertices, 3 edges>
 gap> EdgeWeightedDigraphShortestPaths(d);
 Error, no method found! For debugging hints type ?Recovery from NoMethodFound
 Error, no 2nd choice method found for `EdgeWeightedDigraphShortestPaths' on 1 \
@@ -255,7 +271,7 @@ fail
 
 # Shortest paths: Johnson
 gap> d := EdgeWeightedDigraph([[2], [3], [], [], []], [[3], [5], [], [], []]);
-<immutable digraph with 5 vertices, 2 edges>
+<immutable edge-weighted digraph with 5 vertices, 2 edges>
 gap> EdgeWeightedDigraphShortestPaths(d, 1);
 rec( distances := [ 0, 3, 8, fail, fail ], edges := [ fail, 1, 1, fail, fail ]
     , parents := [ fail, 1, 2, fail, fail ] )
@@ -270,14 +286,306 @@ rec( distances := [ [ 0, 3, 8, fail, fail ], [ fail, 0, 5, fail, fail ],
       [ fail, fail, fail, fail, fail ], [ fail, fail, fail, fail, fail ], 
       [ fail, fail, fail, fail, fail ] ] )
 gap> EdgeWeightedDigraphShortestPaths(d, 6);
-Error, the 2nd argument <source> must be a vertex of the 1st argument <digraph\
->,
+Error, the 2nd argument <source> must be a vertex of the 1st argument <D>,
 gap> EdgeWeightedDigraphShortestPath(d, 1, 3);
 [ [ 1, 2, 3 ], [ 1, 1 ] ]
 
-#  DIGRAPHS_UnbindVariables
-gap> Unbind(d);
-gap> Unbind(tree);
+#############################################################################
+# 5. Maximum Flow and Minimum Cut
+#############################################################################
+
+# Maximum flow: empty digraphs
+gap> d := EdgeWeightedDigraph([], []);
+<immutable empty edge-weighted digraph with 0 vertices>
+gap> DigraphMaximumFlow(d, 1, 1);
+Error, <start> must be a vertex of <D>,
+
+# Maximum flow: single vertex (also empty digraphs)
+gap> d := EdgeWeightedDigraph([[]], [[]]);
+<immutable empty edge-weighted digraph with 1 vertex>
+gap> DigraphMaximumFlow(d, 1, 1);
+[ [  ] ]
+
+# Maximum flow: source = dest
+gap> d := EdgeWeightedDigraph([[2], []], [[5], []]);
+<immutable edge-weighted digraph with 2 vertices, 1 edge>
+gap> DigraphMaximumFlow(d, 1, 1);
+[ [ 0 ], [  ] ]
+
+# Maximum flow: has loop
+gap> d := EdgeWeightedDigraph([[1, 2], []], [[5, 10], []]);
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
+gap> DigraphMaximumFlow(d, 1, 2);
+[ [ 0, 10 ], [  ] ]
+
+# Maximum flow: invalid source
+gap> d := EdgeWeightedDigraph([[1, 2], []], [[5, 10], []]);
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
+gap> DigraphMaximumFlow(d, 5, 2);
+Error, <start> must be a vertex of <D>,
+
+# Maximum flow: invalid sink
+gap> d := EdgeWeightedDigraph([[1, 2], []], [[5, 10], []]);
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
+gap> DigraphMaximumFlow(d, 1, 5);
+Error, <destination> must be a vertex of <D>,
+
+# Maximum flow: sink not reachable
+gap> d := EdgeWeightedDigraph([[1], []], [[5], []]);
+<immutable edge-weighted digraph with 2 vertices, 1 edge>
+gap> DigraphMaximumFlow(d, 1, 2);
+[ [ 0 ], [  ] ]
+
+# Maximum flow: source has in neighbours
+gap> d := EdgeWeightedDigraph([[2], [3], []], [[5], [10], []]);
+<immutable edge-weighted digraph with 3 vertices, 2 edges>
+gap> DigraphMaximumFlow(d, 2, 3);
+[ [ 0 ], [ 10 ], [  ] ]
+
+# Maximum flow: sink has out-neighbours
+gap> d := EdgeWeightedDigraph([[2], [3], [2]], [[5], [10], [7]]);
+<immutable edge-weighted digraph with 3 vertices, 3 edges>
+gap> DigraphMaximumFlow(d, 2, 3);                           
+[ [ 0 ], [ 10 ], [ 0 ] ]
+
+# Maximum flow: cycle
+gap> d := EdgeWeightedDigraph([[2], [3], [1]], [[5], [10], [7]]);
+<immutable edge-weighted digraph with 3 vertices, 3 edges>
+gap> DigraphMaximumFlow(d, 1, 3);
+[ [ 5 ], [ 5 ], [ 0 ] ]
+
+# Maximum flow: example from Wikipedia
+gap> gr := EdgeWeightedDigraph([[3, 4], [], [2, 4], [2]],
+>                              [[10, 5], [], [5, 15], [10]]);;
+gap> DigraphMaximumFlow(gr, 1, 2);
+[ [ 10, 5 ], [  ], [ 5, 5 ], [ 10 ] ]
+gap> DigraphMaximumFlow(gr, 3, 2);
+[ [ 0, 0 ], [  ], [ 5, 10 ], [ 10 ] ]
+
+# Maximum flow: example from Wikipedia article on Push-label maximum flow
+gap> gr := EdgeWeightedDigraph([[2], [3, 6], [4], [1, 6], [1, 3], []],
+>                              [[12], [3, 7], [10], [5, 10], [15, 4], []]);;
+gap> DigraphMaximumFlow(gr, 5, 6);
+[ [ 10 ], [ 3, 7 ], [ 7 ], [ 0, 7 ], [ 10, 4 ], [  ] ]
+
+# Minimum cut: empty digraphs
+gap> d := EdgeWeightedDigraph([], []);
+<immutable empty edge-weighted digraph with 0 vertices>
+gap> DigraphMinimumCut(d, 1, 1);
+Error, <s> must be a vertex of <D>,
+
+# Minimum cut: single vertex (also empty digraphs)
+gap> d := EdgeWeightedDigraph([[]], [[]]);
+<immutable empty edge-weighted digraph with 1 vertex>
+gap> DigraphMinimumCut(d, 1, 1);
+Error, <s> and <t> must be distinct
+
+# Minimum cut: source = dest
+gap> d := EdgeWeightedDigraph([[2], []], [[5], []]);
+<immutable edge-weighted digraph with 2 vertices, 1 edge>
+gap> DigraphMinimumCut(d, 1, 1);
+Error, <s> and <t> must be distinct
+
+# Minimum cut: has loop
+gap> d := EdgeWeightedDigraph([[1, 2], []], [[5, 10], []]);
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
+gap> DigraphMinimumCut(d, 1, 2);
+[ [ 1 ], [ 2 ] ]
+
+# Minimum cut: invalid source
+gap> d := EdgeWeightedDigraph([[1, 2], []], [[5, 10], []]);
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
+gap> DigraphMinimumCut(d, 5, 2);
+Error, <s> must be a vertex of <D>,
+
+# Minimum cut: invalid sink
+gap> d := EdgeWeightedDigraph([[1, 2], []], [[5, 10], []]);
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
+gap> DigraphMinimumCut(d, 1, 5);
+Error, <t> must be a vertex of <D>,
+
+# Minimum cut: sink not reachable
+gap> d := EdgeWeightedDigraph([[1], []], [[5], []]);
+<immutable edge-weighted digraph with 2 vertices, 1 edge>
+gap> DigraphMinimumCut(d, 1, 2);
+[ [ 1 ], [ 2 ] ]
+
+# Minimum cut: source has in neighbours
+gap> d := EdgeWeightedDigraph([[2], [3], []], [[5], [10], []]);
+<immutable edge-weighted digraph with 3 vertices, 2 edges>
+gap> DigraphMinimumCut(d, 2, 3);
+[ [ 2 ], [ 1, 3 ] ]
+
+# Minimum cut: sink has out-neighbours
+gap> d := EdgeWeightedDigraph([[2], [3], [2]], [[5], [10], [7]]);
+<immutable edge-weighted digraph with 3 vertices, 3 edges>
+gap> DigraphMinimumCut(d, 2, 3);
+[ [ 2 ], [ 1, 3 ] ]
+
+# Minimum cut: cycle
+gap> d := EdgeWeightedDigraph([[2], [3], [1]], [[5], [10], [7]]);
+<immutable edge-weighted digraph with 3 vertices, 3 edges>
+gap> DigraphMinimumCut(d, 1, 3);
+[ [ 1 ], [ 2, 3 ] ]
+
+# Minimum cut: example from Wikipedia
+gap> gr := EdgeWeightedDigraph([[3, 4], [], [2, 4], [2]],
+>                              [[10, 5], [], [5, 15], [10]]);;
+gap> DigraphMinimumCut(gr, 1, 2);
+[ [ 1 ], [ 2, 3, 4 ] ]
+gap> DigraphMinimumCut(gr, 3, 2);
+[ [ 3, 4 ], [ 1, 2 ] ]
+
+# Minimum cut: example from Wikipedia article on Push-label maximum flow
+gap> gr := EdgeWeightedDigraph([[2], [3, 6], [4], [1, 6], [1, 3], []],
+>                              [[12], [3, 7], [10], [5, 10], [15, 4], []]);;
+gap> DigraphMinimumCut(gr, 5, 6);
+[ [ 5, 1, 2 ], [ 3, 4, 6 ] ]
+
+# Minimum cut set: empty digraphs
+gap> d := EdgeWeightedDigraph([], []);
+<immutable empty edge-weighted digraph with 0 vertices>
+gap> DigraphMinimumCutSet(d, 1, 1);
+Error, <s> must be a vertex of <D>,
+
+# Minimum cut set: source has in neighbours
+gap> d := EdgeWeightedDigraph([[2], [3], []], [[5], [10], []]);
+<immutable edge-weighted digraph with 3 vertices, 2 edges>
+gap> DigraphMinimumCutSet(d, 2, 3);
+[ [ 2, 3 ] ]
+
+# Minimum cut set: cycle
+gap> d := EdgeWeightedDigraph([[2], [3], [1]], [[5], [10], [7]]);
+<immutable edge-weighted digraph with 3 vertices, 3 edges>
+gap> DigraphMinimumCutSet(d, 1, 3);
+[ [ 1, 2 ] ]
+
+# Minimum cut set: invalid sink
+gap> d := EdgeWeightedDigraph([[1, 2], []], [[5, 10], []]);
+<immutable edge-weighted digraph with 2 vertices, 2 edges>
+gap> DigraphMinimumCutSet(d, 1, 5);
+Error, <t> must be a vertex of <D>,
+
+# Minimum cut set: source = dest
+gap> d := EdgeWeightedDigraph([[2], []], [[5], []]);
+<immutable edge-weighted digraph with 2 vertices, 1 edge>
+gap> DigraphMinimumCutSet(d, 1, 1);
+Error, <s> and <t> must be distinct
+
+#############################################################################
+# 6. Random edge-weighted digraphs
+#############################################################################
+
+# Random edge-weighted digraph with n
+gap> D := RandomUniqueEdgeWeightedDigraph(5);;
+gap> DigraphNrVertices(D);
+5
+gap> HasEdgeWeights(D);
+true
+
+# Random edge-weighted digraph with n, p
+gap> D := RandomUniqueEdgeWeightedDigraph(10, 1 / 2);;
+gap> DigraphNrVertices(D);
+10
+gap> HasEdgeWeights(D);
+true
+gap> SortedList(Flat(EdgeWeights(D))) = [1 .. DigraphNrEdges(D)];
+true
+
+# Random edge-weighted digraph with filt, n, p
+gap> D := RandomUniqueEdgeWeightedDigraph(IsEulerianDigraph, 5, 0.3);;
+gap> DigraphNrVertices(D);
+5
+gap> HasEdgeWeights(D);
+true
+gap> IsEulerianDigraph(D);
+true
+gap> SortedList(Flat(EdgeWeights(D))) = [1 .. DigraphNrEdges(D)];
+true
+
+#############################################################################
+# 7. Drawing edge-weighted digraphs
+#############################################################################
+
+# Trivial example
+gap> gr := EdgeWeightedDigraph([[2], []], [[10], []]);;
+gap> Print(DotEdgeWeightedDigraph(gr));
+//dot
+digraph hgn{
+node [shape=circle]
+1[color=gray, style=filled]
+2[color=gray, style=filled]
+1 -> 2[color=black, label=10]
+}
+gap> Print(DotEdgeWeightedDigraph(gr, rec(vert := "orange")));
+//dot
+digraph hgn{
+node [shape=circle]
+1[color=orange, style=filled]
+2[color=orange, style=filled]
+1 -> 2[color=black, label=10]
+}
+
+# Cycle example
+gap> gr := EdgeWeightedDigraph(CycleDigraph(5), [[10], [4], [8], [2], [8]]);;
+gap> path := DigraphPath(gr, 3, 1);
+[ [ 3, 4, 5, 1 ], [ 1, 1, 1 ] ]
+gap> Print(DotEdgeWeightedDigraph(gr, path, rec(highlight := "red")));
+//dot
+digraph hgn{
+node [shape=circle]
+1[color=lightpink, style=filled]
+2[color=gray, style=filled]
+3[color=yellowgreen, style=filled]
+4[color=gray, style=filled]
+5[color=gray, style=filled]
+1 -> 2[color=black, label=10]
+2 -> 3[color=black, label=4]
+3 -> 4[color=red, label=8]
+4 -> 5[color=red, label=2]
+5 -> 1[color=red, label=8]
+}
+
+# Large example
+gap> gr := EdgeWeightedDigraph(
+>   [[5, 7], [5], [1, 3, 6], [1, 3], [4, 5], [1, 2], [6]],
+>   [[8, 4], [12], [11, 2, 10], [3, 7], [9, 13], [1, 6], [5]]);
+<immutable edge-weighted digraph with 7 vertices, 13 edges>
+gap> path := EdgeWeightedDigraphShortestPath(gr, 1, 2);
+[ [ 1, 7, 6, 2 ], [ 2, 1, 2 ] ]
+gap> Print(DotEdgeWeightedDigraph(gr, path));
+//dot
+digraph hgn{
+node [shape=circle]
+1[color=yellowgreen, style=filled]
+2[color=lightpink, style=filled]
+3[color=gray, style=filled]
+4[color=gray, style=filled]
+5[color=gray, style=filled]
+6[color=gray, style=filled]
+7[color=gray, style=filled]
+1 -> 5[color=black, label=8]
+1 -> 7[color=blue, label=4]
+2 -> 5[color=black, label=12]
+3 -> 1[color=black, label=11]
+3 -> 3[color=black, label=2]
+3 -> 6[color=black, label=10]
+4 -> 1[color=black, label=3]
+4 -> 3[color=black, label=7]
+5 -> 4[color=black, label=9]
+5 -> 5[color=black, label=13]
+6 -> 1[color=black, label=1]
+6 -> 2[color=blue, label=6]
+7 -> 6[color=blue, label=5]
+}
+
+# Bad arguments
+gap> DotEdgeWeightedDigraph(
+>   CompleteDigraph(3),
+>   [[1, 2], [3, 4], [5, 6]],
+>   rec(vert := "blue", mrblobby := "pink")
+> );
+Error, 3rd arg <colors> contains unsupported option named 'mrblobby'
 
 #
 gap> DIGRAPHS_StopTest();

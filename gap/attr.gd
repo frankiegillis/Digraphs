@@ -54,6 +54,7 @@ DeclareAttribute("DigraphOddGirth", IsDigraph);
 DeclareAttribute("DigraphUndirectedGirth", IsDigraph);
 DeclareAttribute("ArticulationPoints", IsDigraph);
 DeclareSynonymAttr("CutVertices", ArticulationPoints);
+DeclareAttribute("MinimalCyclicEdgeCut", IsDigraph);
 DeclareAttribute("DIGRAPHS_AbsorbingMarkovChain", IsDigraph);
 DeclareAttribute("DigraphAbsorptionProbabilities", IsDigraph);
 DeclareAttribute("DigraphAbsorptionExpectedSteps", IsDigraph);
@@ -61,6 +62,8 @@ DeclareAttribute("DigraphAbsorptionExpectedSteps", IsDigraph);
 DeclareAttribute("DigraphAllSimpleCircuits", IsDigraph);
 DeclareAttribute("DigraphLongestSimpleCircuit", IsDigraph);
 DeclareAttribute("DigraphAllUndirectedSimpleCircuits", IsDigraph);
+DeclareOperation("DigraphAllChordlessCyclesOfMaximalLength",
+    [IsDigraph, IsInt]);
 DeclareAttribute("DigraphAllChordlessCycles", IsDigraph);
 DeclareOperation("FacialWalks", [IsDigraph, IsList]);
 DeclareAttribute("HamiltonianPath", IsDigraph);
@@ -74,6 +77,7 @@ DeclareAttribute("DigraphCore", IsDigraph);
 
 DeclareAttribute("CharacteristicPolynomial", IsDigraph);
 DeclareAttribute("NrSpanningTrees", IsDigraph);
+DeclareAttribute("DigraphVertexConnectivity", IsDigraph);
 
 # AsGraph must be mutable for grape to function properly
 DeclareAttribute("AsGraph", IsDigraph, "mutable");
@@ -86,6 +90,7 @@ DeclareAttributeThatReturnsDigraph("DigraphReverse", IsDigraph);
 DeclareAttributeThatReturnsDigraph("DigraphDual", IsDigraph);
 DeclareAttributeThatReturnsDigraph("ReducedDigraph", IsDigraph);
 DeclareAttributeThatReturnsDigraph("DigraphRemoveAllMultipleEdges", IsDigraph);
+DeclareAttributeThatReturnsDigraph("DigraphRemoveAllEdges", IsDigraph);
 
 # TODO replace all DeclareOperations below to
 # DeclareAttributeThatReturnsDigraph, and remove the *Attr versions.

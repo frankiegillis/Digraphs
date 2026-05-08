@@ -989,19 +989,40 @@ function(D1, D2, edge_function)
   return Digraph(edges);
 end);
 
+InstallMethod(SwapDigraphs,
+"for two mutable digraphs",
+[IsMutableDigraph, IsMutableDigraph],
+function(D1, D2)
+  local nb1, nb2;
+    nb1 := OutNeighbours(D1);
+    nb2 := OutNeighbours(D2);
+    D1!.OutNeighbours := nb2;
+    D2!.OutNeighbours := nb1;
+end);
+
 ###############################################################################
 # 4. Actions
 ###############################################################################
 
-InstallMethod(OnDigraphs, "for a mutable digraph by out-neighbours and a perm",
-[IsMutableDigraph and IsDigraphByOutNeighboursRep, IsPerm],
+InstallMethod(OnDigraphs, "for a digraph and a perm",
+[IsDigraph, IsPerm],
 function(D, p)
-  local out;
   if ForAll(DigraphVertices(D), i -> i ^ p = i) then
     return D;
   elif ForAny(DigraphVertices(D), i -> i ^ p > DigraphNrVertices(D)) then
     ErrorNoReturn("the 2nd argument <p> must be a permutation that permutes ",
-                  "the vertices of the digraph <D> that is the 1st argument,");
+                  "the vertices of the digraph <D> that is the 1st argument");
+  fi;
+  return OnDigraphsNC(D, p);
+end);
+
+InstallMethod(OnDigraphsNC,
+"for a mutable digraph by out-neighbours and a perm",
+[IsMutableDigraph and IsDigraphByOutNeighboursRep, IsPerm],
+function(D, p)
+  local out;
+  if p = () then
+    return D;
   fi;
   out := D!.OutNeighbours;
   out{DigraphVertices(D)} := Permuted(out, p);
@@ -1010,26 +1031,40 @@ function(D, p)
   return D;
 end);
 
-InstallMethod(OnDigraphs, "for a immutable digraph and a perm",
+InstallMethod(OnDigraphsNC, "for a immutable digraph and a perm",
 [IsImmutableDigraph, IsPerm],
 function(D, p)
-  if ForAll(DigraphVertices(D), i -> i ^ p = i) then
+  local out, permed;
+  if p = () then
     return D;
   fi;
-  return MakeImmutable(OnDigraphs(DigraphMutableCopy(D), p));
+  out := D!.OutNeighbours;
+  permed := Permuted(out, p);
+  Apply(permed, x -> OnTuples(x, p));
+  return DigraphNC(IsImmutableDigraph, permed);
 end);
 
 InstallMethod(OnDigraphs,
-"for a mutable digraph by out-neighbours and a transformation",
-[IsMutableDigraph and IsDigraphByOutNeighboursRep, IsTransformation],
+"for a digraph and a transformation",
+[IsDigraph, IsTransformation],
 function(D, t)
-  local old, new, v;
   if ForAll(DigraphVertices(D), i -> i ^ t = i) then
     return D;
   elif ForAny(DigraphVertices(D), i -> i ^ t > DigraphNrVertices(D)) then
     ErrorNoReturn("the 2nd argument <t> must be a transformation that ",
                   "maps every vertex of the digraph <D> that is the 1st ",
-                  "argument, to another vertex.");
+                  "argument, to another vertex");
+  fi;
+  return OnDigraphsNC(D, t);
+end);
+
+InstallMethod(OnDigraphsNC,
+"for a mutable digraph by out-neighbours and a transformation",
+[IsMutableDigraph and IsDigraphByOutNeighboursRep, IsTransformation],
+function(D, t)
+  local old, new, v;
+  if t = IdentityTransformation then
+    return D;
   fi;
   old := D!.OutNeighbours;
   new := List(DigraphVertices(D), x -> []);
@@ -1041,13 +1076,19 @@ function(D, t)
   return D;
 end);
 
-InstallMethod(OnDigraphs, "for a immutable digraph and a transformation",
+InstallMethod(OnDigraphsNC, "for a immutable digraph and a transformation",
 [IsImmutableDigraph, IsTransformation],
 function(D, t)
-  if ForAll(DigraphVertices(D), i -> i ^ t = i) then
+  local old, new, v;
+  if t = IdentityTransformation then
     return D;
   fi;
-  return MakeImmutable(OnDigraphs(DigraphMutableCopy(D), t));
+  old := D!.OutNeighbours;
+  new := List(DigraphVertices(D), x -> []);
+  for v in DigraphVertices(D) do
+    Append(new[v ^ t], OnTuples(old[v], t));
+  od;
+  return DigraphNC(IsImmutableDigraph, new);
 end);
 
 InstallMethod(OnTuplesDigraphs,
@@ -1060,7 +1101,7 @@ InstallMethod(OnSetsDigraphs,
 [IsDigraphCollection and IsHomogeneousList, IsPerm],
 function(S, p)
   if not IsSet(S) then
-    ErrorNoReturn("the first argument must be a set (a strictly sorted list),");
+    ErrorNoReturn("the first argument must be a set (a strictly sorted list)");
   fi;
   return Set(S, D -> OnDigraphs(DigraphMutableCopyIfMutable(D), p));
 end);
@@ -1081,7 +1122,7 @@ function(D, perms)
             i -> i ^ perms[2] > DigraphNrEdges(D)) then
     ErrorNoReturn("the 2nd entry of the 2nd argument <perms> must ",
                   "permute the edges of the digraph <D> that is the 1st ",
-                  "argument,");
+                  "argument");
   fi;
 
   return OnDigraphs(D, perms[1]);
@@ -1096,6 +1137,16 @@ end);
 InstallMethod(DomainForAction, "for a digraph, list or collection and function",
 [IsDigraph, IsListOrCollection, IsFunction],
 ReturnTrue);
+
+# Operator action: D^p  and  D^t
+# Allow D ^ p (digraph and permutation) to call OnDigraphs(D, p)
+# and D ^ t (digraph and transformation) to call OnDigraphs(D, t)
+
+InstallMethod(\^, "digraph acted on by a permutation",
+  [IsDigraph, IsPerm], OnDigraphs);
+
+InstallMethod(\^, "digraph acted on by a transformation",
+  [IsDigraph, IsTransformation], OnDigraphs);
 
 #############################################################################
 # 5. Substructures and quotients
@@ -1548,6 +1599,21 @@ end);
 #############################################################################
 # 9.  Connectivity
 #############################################################################
+
+InstallMethod(DigraphIsKing,
+"for a digraph and two positive integers",
+[IsDigraph, IsPosInt, IsPosInt],
+function(D, v, k)
+  local layers;
+  if not v in DigraphVertices(D) then
+    ErrorNoReturn("the 2nd argument <v> is not a vertex of the ",
+                  "1st argument <D>,");
+  elif not IsTournament(D) then
+    ErrorNoReturn("the 1st argument <D> must be a tournament,");
+  fi;
+  layers := DigraphLayers(D, v);
+  return ((Length(layers) <= k + 1) and (Union(layers) = DigraphVertices(D)));
+end);
 
 InstallMethod(DigraphFloydWarshall,
 "for a digraph by out-neighbours, function, object, and object",
@@ -2652,4 +2718,163 @@ function(D, i, j)
   od;
 
   return fail;
+end);
+
+InstallMethod(DigraphKings, "for a digraph and a positive integer",
+[IsDigraph, IsPosInt],
+function(D, n)
+  local v, kings;
+  kings := [];
+  for v in DigraphVertices(D) do
+    if DigraphIsKing(D, v, n) then
+      Add(kings, v);
+    fi;
+  od;
+  return kings;
+end);
+
+InstallMethod(DigraphColourRefinement, "for a digraph", [IsDigraph],
+function(D)
+
+  local i, cMin, cMax, Q, q, C, CD, j, P, v, outNB, inNB, colourCells,
+  pair, current, currentPair, newSet, colour, largest, recolour, cell,
+  colourCell, toAdd, DVertices, DNrVertices, outNeighboursD, inNeighboursD;
+
+  if DigraphHasLoops(D) then
+    ErrorNoReturn("the digraph cannot contain loops");
+  fi;
+
+  outNeighboursD := OutNeighbours(D);
+  inNeighboursD := InNeighbours(D);
+
+  DNrVertices := DigraphNrVertices(D);
+  DVertices := DigraphVertices(D);
+
+  cMin := 1;
+  cMax := 1;
+
+  # Queue of colours
+  Q := [1];
+
+  # Initial colouring
+  # vertices -> colour
+  C := ListWithIdenticalEntries(DNrVertices, 1);
+
+  # Colour classes
+  # All vertices initialised to 1
+  # colour -> vertices labelled as such
+  P := [];
+  P[1] := [1 .. DNrVertices];
+
+  while not IsEmpty(Q) do
+
+    # Pop colour off Q
+    q := Remove(Q, 1);
+
+    # For each v (vertices) in D:
+    # Get the neighbours of v that are in the colour class q
+    outNB := EmptyPlist(DNrVertices);
+    inNB := EmptyPlist(DNrVertices);
+
+    for v in DVertices do
+      outNB[v] := Intersection(outNeighboursD[v], P[q - cMin + 1]);
+      inNB[v] := Intersection(inNeighboursD[v], P[q - cMin + 1]);
+    od;
+
+    CD := List(DVertices, v -> [C[v], Length(outNB[v]), Length(inNB[v]), v]);
+
+    Sort(CD);
+
+    colourCells := [];
+    currentPair := [];
+    colourCell := [];
+    cell := [];
+
+    recolour := false;
+
+    j := 0;
+
+    # Creating the multiset of colours of neighbours:
+    # This multiset is used to determine whether to refine the colouring
+    # and if so, which cells to split. The label of each vertex has no bearing
+    # in either of these decisions (as they are irrelevant to the creation or
+    # sorting of the multiset) - meaning the colouring produced is canonical.
+    for pair in CD do
+      current := [pair[1], pair[2], pair[3]];
+
+      # If different colour reached:
+      if currentPair <> [] and current[1] <> currentPair[1] then
+        Add(colourCell, cell);
+        Add(colourCells, colourCell);
+        cell := [pair[4]];
+        colourCell := [];
+      else
+        # If first iteration, or same neighbour configuration:
+        if currentPair = [] or current = currentPair then
+          Add(cell, pair[4]);
+        else
+          # If same colour, but different neighbour configuration:
+          recolour := true;
+          Add(colourCell, cell);
+          cell := [pair[4]];
+        fi;
+      fi;
+
+      currentPair := current;
+    od;
+    Add(colourCell, cell);
+    Add(colourCells, colourCell);
+
+    # If there is reason for recolouring
+    if recolour then
+
+      # Clearing P and Q
+      P := [];
+      Q := [];
+
+      # Add to Q
+      toAdd := cMax;
+
+      for i in [1 .. Length(colourCells)] do
+
+        colourCell := colourCells[i];
+
+        # Determine the largest cell for that colour
+        largest := PositionMaximum(colourCell, Length);
+
+        # Add all new colours except that corresponding to the largest cell
+        for j in [1 .. Length(colourCell)] do
+          toAdd := toAdd + 1;
+          if j <> largest then
+            Add(Q, toAdd);
+          fi;
+        od;
+
+      od;
+
+      # Updating colours for the next round
+      cMin := cMax + 1;
+      cMax := toAdd;
+
+      colour := cMin;
+
+      # Updating C and P
+      for i in [1 .. Length(colourCells)] do
+        for j in [1 .. Length(colourCells[i])] do
+          Add(P, []);
+          for v in colourCells[i][j] do
+            C[v] := colour;
+            Add(P[Length(P)], v);
+          od;
+
+          colour := colour + 1;
+
+        od;
+      od;
+    fi;
+
+  od;
+
+  return C - (cMin - 1);
+
 end);

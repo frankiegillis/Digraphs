@@ -214,7 +214,7 @@ end);
 
 InstallImmediateMethod(IsConnectedDigraph,
 IsDigraph and HasDigraphConnectedComponents, 0,
-D -> Length(DigraphConnectedComponents(D).comps) = 1);
+D -> Length(DigraphConnectedComponents(D).comps) <= 1);
 
 InstallMethod(IsConnectedDigraph, "for a digraph", [IsDigraph],
 function(D)
@@ -227,6 +227,11 @@ function(D)
   # Otherwise use DigraphConnectedComponents method
   return DigraphNrConnectedComponents(D) = 1;
 end);
+
+InstallImmediateMethod(IsConnectedDigraph,
+"for a digraph with known number of connected components",
+IsDigraph and HasDigraphNrConnectedComponents, 0,
+D -> DigraphNrConnectedComponents(D) <= 1);
 
 InstallImmediateMethod(IsAcyclicDigraph, "for a reflexive digraph",
 IsReflexiveDigraph, 0,
@@ -479,12 +484,13 @@ function(D)
 end);
 
 InstallMethod(IsDirectedTree, "for a digraph", [IsDigraph],
-function(D)
-  if IsNullDigraph(D) then
-    return DigraphNrVertices(D) = 1;
-  fi;
-  return IsConnectedDigraph(D) and InDegreeSet(D) = [0, 1];
-end);
+{D} -> DigraphHasAVertex(D) and IsConnectedDigraph(D)
+     and (IsEmptyDigraph(D) or InDegreeSet(D) = [0, 1]));
+
+InstallMethod(IsDirectedForest, "for a digraph", [IsDigraph],
+{D} -> DigraphHasAVertex(D) and
+    (IsEmptyDigraph(D) or ForAll(DigraphConnectedComponents(D).comps,
+                                 x -> Set(InDegrees(D){x}) = [0, 1])));
 
 InstallMethod(IsEulerianDigraph, "for a digraph", [IsDigraph],
 function(D)
@@ -687,25 +693,256 @@ function(D)
   return LatticeDigraphEmbedding(N5, D) = fail;
 end);
 
-InstallMethod(IsTwoEdgeTransitive,
+InstallMethod(Is2EdgeTransitive,
 "for a digraph without multiple edges",
 [IsDigraph],
 function(D)
-  local twoEdges;
-
+  local Aut, O, I, Centers, Count, In, Out, u;
   if IsMultiDigraph(D) then
     ErrorNoReturn("the argument <D> must be a digraph with no multiple",
                   " edges,");
   fi;
 
-  twoEdges := Filtered(Cartesian(DigraphEdges(D), DigraphEdges(D)),
-                       pair -> pair[1][2] = pair[2][1]
-                               and pair[1][1] <> pair[2][2]);
+  Aut := AutomorphismGroup(D);
+  D := DigraphRemoveLoops(D);
+  O := D!.OutNeighbours;
+  I := InNeighbours(D);
+  # The list Centers will store all those vertices which lie at the
+  # center of a 2-edge.
 
-  if Length(twoEdges) = 0 then
+  Centers := [];
+
+  for u in [1 .. Length(O)] do
+    if Length(O[u]) > 0 and Length(I[u]) > 0 then
+      # If u has precisely one in neighbour and out neighbour,
+      # we must check these are not the same vertex as then there
+      # would be no 2-edge centered at u.
+
+      if Length(O[u]) = 1 and Length(I[u]) = 1 then
+        if O[u][1] = I[u][1] then
+          continue;
+        fi;
+      fi;
+      if not IsBound(Out) then
+        Out := Length(O[u]);
+        In := Length(I[u]);
+      fi;
+      # For D to be 2-edge transitive, it must be transitive
+      # on 2-edge centers, so all 2-edge centers must have the
+      # same in-degree and same out-degree.
+
+      if Out <> Length(O[u]) or In <> Length(I[u]) then
+        return false;
+      fi;
+      Add(Centers, u);
+    fi;
+  od;
+  # If Centers is empty, D has no 2-edges so is vacuously 2-edge
+  # transtive.
+
+  if Length(Centers) = 0 then
     return true;
-  else
-    return OrbitLength(AutomorphismGroup(D), twoEdges[1], OnTuplesTuples)
-         = Length(twoEdges);
   fi;
+  # Find the number of 2-cycles at any center. We will have to subtract
+  # these from the total number of 2-edges as 2-cycles are not classed
+  # as 2-edges.
+
+  Count := 0;
+  for u in O[Centers[1]] do
+    if Centers[1] in O[u] then
+      Count := Count + 1;
+    fi;
+  od;
+
+  # Find a 2-edge and check if its orbit length equals the number of 2-edges.
+  # By this point, we know that D is likely a highly symmetric digraph,
+  # since all 2-edge centers share a common in and out degree
+  # (This is by no means a guarantee, see Frucht's graph). From testing,
+  # calculating the stabilizer and using the orbit-stabilizer
+  # theorem is usually must faster in this case, so we instead determine
+  # the stabilizer of a 2-edge.
+
+  for u in I[Centers[1]] do
+    if Position(O[Centers[1]], u) = 1 then
+      if Length(O[Centers[1]]) = 1 then
+        continue;
+      else
+        return (In * Out - Count) * Length(Centers) =
+               Order(Aut) / Order(Stabilizer(Aut,
+                                             [u,
+                                              Centers[1],
+                                              O[Centers[1]][2]],
+                                             OnTuples));
+      fi;
+    else
+      return (In * Out - Count) * Length(Centers) =
+             Order(Aut) / Order(Stabilizer(Aut,
+                                           [u,
+                                            Centers[1],
+                                            O[Centers[1]][1]],
+                                           OnTuples));
+    fi;
+  od;
 end);
+
+InstallMethod(IsCograph,
+"for an immutable digraph",
+[IsImmutableDigraph],
+function(D)
+  local V, P, x, N, parts, unused_parts, p, C, k, y, M, X, X_a,
+        used_pivots, C_origin, po, lpart, rpart, zl, zr, origin,
+        sigma, posx, prec, succ, N_prec, N_succ;
+
+  # D must be a symmetric digraph without loops or multiple edges
+  if not IsSymmetricDigraph(D) then;
+    Error("IsCograph: argument must be a symmetric digraph");
+  elif DigraphHasLoops(D) then;
+    Error("IsCograph: argument must be a digraph without loops");
+  elif IsMultiDigraph(D) then;
+    Error("IsCograph: argument must be a digraph without multiple edges");
+  fi;
+
+  V := DigraphVertices(D);
+
+  if Length(V) < 4 then
+    return true;
+  fi;
+
+  P := [V];
+  used_pivots := [];
+  origin := V[1];
+
+  # If origin is an isolated or universal vertex, then recurse
+  # on D[V \ {origin}]
+  if Length(OutNeighboursOfVertex(D, origin)) = 0 or
+      Length(OutNeighboursOfVertex(D, origin)) = Length(V) - 1 then
+    return IsCograph(DigraphRemoveVertex(D, origin));
+  fi;
+
+  while not ForAll(P, p -> Length(p) <= 1) do
+    C_origin := First(P, p -> origin in p);
+
+    # Initialise
+    N := IntersectionSet(OutNeighboursOfVertex(D, origin), C_origin);
+    parts := [N, [origin], Difference(C_origin, UnionSet(N, [origin]))];
+    unused_parts := Filtered([parts[1], parts[3]], p -> Length(p) > 0);
+    k := Position(P, C_origin);
+    Remove(P, k);
+    for p in parts do
+        if Length(p) > 0 then
+            Add(P, p, k);
+        fi;
+    od;
+
+    # Refine
+    while Length(unused_parts) > 0 do
+      C := unused_parts[1];
+      y := C[1];
+      Add(used_pivots, y);
+      N := OutNeighboursOfVertex(D, y);
+      M := Filtered(P, p -> Length(IntersectionSet(p, N)) > 0 and
+                            not IsSubset(N, p) and
+                            p <> C);
+      for X in M do
+        X_a := IntersectionSet(X, N);
+        k := Position(P, X);
+        Remove(P, k);
+        Add(P, X_a, k);
+        Add(P, Difference(X, X_a), k);
+        if X in unused_parts then
+          Remove(unused_parts, Position(unused_parts, X));
+          Add(unused_parts, X_a);
+          Add(unused_parts, Difference(X, X_a));
+        else
+          x := IntersectionSet(used_pivots, X)[1];
+          if x in X_a then
+            Add(unused_parts, Difference(X, X_a));
+          else
+            Add(unused_parts, X_a);
+          fi;
+        fi;
+      od;
+      Remove(unused_parts, Position(unused_parts, C));
+    od;
+
+    # Choose new origin
+    lpart := [];
+    rpart := [];
+    po := Position(P, [origin]);
+    for p in P{[1 .. po - 1]} do
+      if Length(p) > 1 then
+        Add(lpart, p);
+      fi;
+    od;
+    for p in P{[po + 1 .. Length(P)]} do
+      if Length(p) > 1 then
+        Add(rpart, p);
+      fi;
+    od;
+
+    if IsEmpty(lpart) then
+      if IsEmpty(rpart) then
+        continue;
+      fi;
+      origin := IntersectionSet(used_pivots, rpart[1])[1];
+    elif IsEmpty(rpart) then
+      origin := IntersectionSet(used_pivots, Last(lpart))[1];
+    else
+      zl := IntersectionSet(used_pivots, Last(lpart))[1];
+      zr := IntersectionSet(used_pivots, rpart[1])[1];
+      if zl in OutNeighboursOfVertex(D, zr) then
+        origin := zl;
+      else
+        origin := zr;
+      fi;
+    fi;
+  od;
+
+  # Recognition Test
+  sigma := [0];
+  for p in P do
+    Add(sigma, p[1]);
+  od;
+  Add(sigma, Length(V) + 1);
+
+  # move left to right
+  posx := 2;
+  x := sigma[posx];
+  while x <> Length(V) + 1 do
+    # calculate neighbours of x, predecessor and successor
+    prec := sigma[posx - 1];
+    succ := sigma[posx + 1];
+    N := Filtered(sigma, n -> n in OutNeighboursOfVertex(D, x));
+    # deal with cases where predecessor or successor is a marker
+    if prec <> 0 then
+      N_prec := Filtered(sigma, n -> n in OutNeighboursOfVertex(D, prec));
+    else
+      N_prec := [0];
+    fi;
+    if succ <> Length(V) + 1 then
+      N_succ := Filtered(sigma, n -> n in OutNeighboursOfVertex(D, succ));
+    else
+      N_succ := [0];
+    fi;
+    # if x shares a neighbourhood with predecessor or successor,
+    # remove the predecessor and move right
+    if N = N_prec or Union(N, [x]) = Union(N_prec, [prec]) then
+      Remove(sigma, posx - 1);
+      posx := posx - 1;
+    elif N = N_succ or Union(N, [x]) = Union(N_succ, [succ]) then
+      Remove(sigma, posx);
+      x := succ;
+    else
+      posx := posx + 1;
+      x := succ;
+    fi;
+  od;
+  # continue until we hit end marker
+  # if only markers remain, G is a cograph
+  return Length(Difference(sigma, [0, Length(V) + 1])) = 1;
+end);
+
+InstallMethod(IsCograph,
+"for a mutable digraph",
+[IsMutableDigraph],
+D -> IsCograph(DigraphImmutableCopy(D)));

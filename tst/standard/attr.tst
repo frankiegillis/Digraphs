@@ -8,11 +8,36 @@
 ##
 #############################################################################
 ##
+
+#@local A, B, D, D1, D2, D3
+#@local G, H, M, M1, P, S, a, adj, adj1, adj2, adjacencies, b
+#@local circuit, complete15, comps, cycle12, e, edgeCut, erev, filename, forest
+#@local g, gNew, gr, gr1, gr2, gr3, gr4, grid, group, i, id, isGraph, j, mat
+#@local multiple, names, nbs, nonPlanar, order, planar, probs, proj, r, rd
+#@local reflextrans, reflextrans1, reflextrans2, representatives, rev, rgr
+#@local rotationSy, rotationSystem, scc, schreierVector, sink, soccer, str
+#@local table, temp, topo, trans, trans1, trans2, tree, wcc, x, y, z
 gap> START_TEST("Digraphs package: standard/attr.tst");
 gap> LoadPackage("digraphs", false);;
 
 #
 gap> DIGRAPHS_StartTest();
+
+# DigraphKings: for a digraph
+gap> gr := Digraph([[2], [3, 4], [1, 4], [1]]);
+<immutable digraph with 4 vertices, 6 edges>
+gap> DigraphKings(gr, 2);
+[ 1, 2, 3 ]
+gap> gr := Digraph([[], [3, 4], [1, 4], [1]]);
+<immutable digraph with 4 vertices, 5 edges>
+gap> DigraphKings(gr, 2);
+Error, the 1st argument <D> must be a tournament,
+gap> gr := RandomTournament(10);
+<immutable tournament with 10 vertices>
+gap> Length(DigraphKings(gr, 2)) >= 1;
+true
+gap> Length(DigraphKings(gr, 2)) <> 2;
+true
 
 #  DigraphSource and DigraphRange
 gap> nbs := [[12, 22, 17, 1, 10, 11], [23, 21, 21, 16],
@@ -1072,6 +1097,18 @@ gap> DigraphAllUndirectedSimpleCircuits(g);
   [ 9, 5, 6, 10 ], [ 9, 5, 7, 8, 6, 10 ] ]
 
 # FacialCycles
+gap> FacialWalks(ChainDigraph(3), []);
+Error, the 1st argument (digraph <D>) must be Eulerian
+gap> FacialWalks(CycleDigraph(3), []);
+Error, the 2nd argument (dense list <rotationSystem>) is not a rotation system\
+ for the 1st argument (digraph <D>), expected a list of 3 lists,
+gap> FacialWalks(CycleDigraph(3), [1]);
+Error, the 2nd argument (dense list <rotationSystem>) is not a rotation system\
+ for the 1st argument (digraph <D>), expected a list of 3 lists,
+gap> FacialWalks(CycleDigraph(3), [[4], [1], [3]]);
+Error, the 2nd argument (dense list <rotationSystem>) is not a rotation system\
+ for the 1st argument (digraph <D>), expected its union to be the vertices of \
+<D>,
 gap> g := Digraph([]);;
 gap> rotationSy := [];;
 gap> FacialWalks(g, rotationSy);
@@ -1823,6 +1860,118 @@ Error, the argument <D> must be a digraph with no loops,
 gap> DIGRAPHS_UnderThreeColourable(EmptyDigraph(0));
 0
 
+#  Test ChromaticNumber Zykov
+gap> ChromaticNumber(NullDigraph(10) : zykov);
+1
+gap> ChromaticNumber(CompleteDigraph(10) : zykov);
+10
+gap> ChromaticNumber(CompleteBipartiteDigraph(5, 5) : zykov);
+2
+gap> ChromaticNumber(DigraphRemoveEdge(CompleteDigraph(10), [1, 2]) : zykov);
+10
+gap> ChromaticNumber(Digraph([[4, 8], [6, 10], [9], [2, 3, 9], [],
+> [3], [4], [6], [], [5, 7]]) : zykov);
+3
+gap> ChromaticNumber(DigraphDisjointUnion(CompleteDigraph(1),
+> Digraph([[2], [4], [1, 2], [3]])) : zykov);
+3
+gap> ChromaticNumber(DigraphDisjointUnion(CompleteDigraph(1),
+> Digraph([[2], [4], [1, 2], [3], [1, 2, 3]])) : zykov);
+4
+gap> gr := Digraph([[2, 3, 4], [3], [], []]);
+<immutable digraph with 4 vertices, 4 edges>
+gap> ChromaticNumber(gr : zykov);
+3
+gap> ChromaticNumber(EmptyDigraph(0) : zykov);
+0
+gap> gr := CompleteDigraph(4);;
+gap> gr := DigraphAddVertex(gr);;
+gap> ChromaticNumber(gr : zykov);
+4
+gap> gr := Digraph([[2, 4, 7, 3], [3, 5, 8, 1], [1, 6, 9, 2],
+> [5, 7, 1, 6], [6, 8, 2, 4], [4, 9, 3, 5], [8, 1, 4, 9], [9, 2, 5, 7],
+> [7, 3, 6, 8]]);;
+gap> ChromaticNumber(gr : zykov);
+3
+gap> gr := DigraphSymmetricClosure(ChainDigraph(5));
+<immutable symmetric digraph with 5 vertices, 8 edges>
+gap> ChromaticNumber(gr : zykov);
+2
+gap> gr := DigraphFromGraph6String("KmKk~K??G@_@");
+<immutable symmetric digraph with 12 vertices, 42 edges>
+gap> ChromaticNumber(gr : zykov);
+4
+gap> gr := CycleDigraph(7);
+<immutable cycle digraph with 7 vertices>
+gap> ChromaticNumber(gr : zykov);
+3
+gap> ChromaticNumber(gr : zykov);
+3
+gap> ChromaticNumber(gr : zykov);
+3
+gap> a := DigraphRemoveEdges(CompleteDigraph(50), [[1, 2], [2, 1]]);;
+gap> b := DigraphAddVertex(a);;
+gap> ChromaticNumber(a : zykov);
+49
+gap> ChromaticNumber(b : zykov);
+49
+
+#  Test ChromaticNumber Christofides
+gap> ChromaticNumber(NullDigraph(10) : christofides);
+1
+gap> ChromaticNumber(CompleteDigraph(10) : christofides);
+10
+gap> ChromaticNumber(CompleteBipartiteDigraph(5, 5) : christofides);
+2
+gap> ChromaticNumber(DigraphRemoveEdge(CompleteDigraph(10), [1, 2]) : christofides);
+10
+gap> ChromaticNumber(Digraph([[4, 8], [6, 10], [9], [2, 3, 9], [],
+> [3], [4], [6], [], [5, 7]]) : christofides);
+3
+gap> ChromaticNumber(DigraphDisjointUnion(CompleteDigraph(1),
+> Digraph([[2], [4], [1, 2], [3]])) : christofides);
+3
+gap> ChromaticNumber(DigraphDisjointUnion(CompleteDigraph(1),
+> Digraph([[2], [4], [1, 2], [3], [1, 2, 3]])) : christofides);
+4
+gap> gr := Digraph([[2, 3, 4], [3], [], []]);
+<immutable digraph with 4 vertices, 4 edges>
+gap> ChromaticNumber(gr : christofides);
+3
+gap> ChromaticNumber(EmptyDigraph(0) : christofides);
+0
+gap> gr := CompleteDigraph(4);;
+gap> gr := DigraphAddVertex(gr);;
+gap> ChromaticNumber(gr : christofides);
+4
+gap> gr := Digraph([[2, 4, 7, 3], [3, 5, 8, 1], [1, 6, 9, 2],
+> [5, 7, 1, 6], [6, 8, 2, 4], [4, 9, 3, 5], [8, 1, 4, 9], [9, 2, 5, 7],
+> [7, 3, 6, 8]]);;
+gap> ChromaticNumber(gr : christofides);
+3
+gap> gr := DigraphSymmetricClosure(ChainDigraph(5));
+<immutable symmetric digraph with 5 vertices, 8 edges>
+gap> ChromaticNumber(gr : christofides);
+2
+gap> gr := DigraphFromGraph6String("KmKk~K??G@_@");
+<immutable symmetric digraph with 12 vertices, 42 edges>
+gap> ChromaticNumber(gr : christofides);
+4
+gap> gr := CycleDigraph(7);
+<immutable cycle digraph with 7 vertices>
+gap> ChromaticNumber(gr : christofides);
+3
+gap> ChromaticNumber(gr : christofides);
+3
+gap> ChromaticNumber(gr : christofides);
+3
+gap> a := DigraphRemoveEdges(CompleteDigraph(50), [[1, 2], [2, 1]]);;
+gap> b := DigraphAddVertex(a);;
+gap> ChromaticNumber(a : christofides);
+49
+gap> ChromaticNumber(b : christofides);
+49
+
 #  DegreeMatrix
 gap> gr := Digraph([[2, 3, 4], [2, 5], [1, 5, 4], [1], [1, 1, 2, 4]]);;
 gap> DegreeMatrix(gr);
@@ -1917,13 +2066,18 @@ true
 gap> D := DigraphFromDigraph6String("&I~~~~^Znn~|~~x^|v{");
 <immutable digraph with 10 vertices, 89 edges>
 gap> tree := UndirectedSpanningTree(D);
-<immutable undirected tree digraph with 10 vertices>
+<immutable undirected tree with 10 vertices>
 gap> IsUndirectedSpanningTree(D, tree);
 true
 gap> tree := UndirectedSpanningTree(DigraphMutableCopy(D));
 <mutable digraph with 10 vertices, 18 edges>
 gap> IsUndirectedSpanningTree(D, tree);
 true
+gap> D := Digraph(IsMutableDigraph, [[1, 2, 1, 3], [1], [4], [2, 3, 4, 3]]);;
+gap> UndirectedSpanningTree(D);
+fail
+gap> DigraphNrEdges(UndirectedSpanningForest(D));
+4
 
 # ArticulationPoints
 gap> ArticulationPoints(CycleDigraph(5));
@@ -1932,11 +2086,11 @@ gap> StrongOrientation(DigraphSymmetricClosure(CycleDigraph(5)))
 > = CycleDigraph(5);
 true
 gap> ArticulationPoints(Digraph([[2, 7], [3, 5], [4], [2], [6], [1], []]));
-[ 2, 1 ]
+[ 1, 2 ]
 gap> StrongOrientation(Digraph([[2, 7], [3, 5], [4], [2], [6], [1], []]));
 Error, not yet implemented
 gap> ArticulationPoints(ChainDigraph(5));
-[ 4, 3, 2 ]
+[ 2, 3, 4 ]
 gap> StrongOrientation(ChainDigraph(5));
 Error, not yet implemented
 gap> ArticulationPoints(NullDigraph(5));
@@ -1986,7 +2140,7 @@ gap> ArticulationPoints(gr);
 gap> gr := Digraph([[2], [3], [], [3]]);
 <immutable digraph with 4 vertices, 3 edges>
 gap> ArticulationPoints(gr);
-[ 3, 2 ]
+[ 2, 3 ]
 gap> IsConnectedDigraph(DigraphRemoveVertex(gr, 3));
 false
 gap> IsConnectedDigraph(DigraphRemoveVertex(gr, 2));
@@ -2017,7 +2171,7 @@ gap> gr := DigraphFromSparse6String(
 > FIJONFQSplq]y@IwvbPKhMh}JGK?OLzW{agKKfRCtarqTGayQGb]rMIurapkxPG?RGcI]\
 > IBtB_`EQKJ@LmxlL_?k^QieOkB|T");
 <immutable symmetric digraph with 87 vertices, 214 edges>
-gap> Set(ArticulationPoints(gr));
+gap> ArticulationPoints(gr);
 [ 1, 3, 8, 11, 12, 15, 17, 18, 19, 21, 23, 27, 30, 36, 37, 41, 42, 46, 51, 
   52, 59, 60, 61, 63, 66, 68, 69, 73, 75, 76, 79, 84, 87 ]
 gap> IsDuplicateFree(last);
@@ -2047,6 +2201,49 @@ gap> ArticulationPoints(D);
 [ 2 ]
 gap> Bridges(D);
 [ [ 2, 3 ], [ 1, 2 ] ]
+
+# MinimalCyclicEdgeCut
+gap> g := HypercubeGraph(3);;
+gap> edgeCut := MinimalCyclicEdgeCut(g);
+[ [ 1, 5 ], [ 2, 6 ], [ 4, 8 ], [ 3, 7 ] ]
+gap> edgeCut := Concatenation(edgeCut, List(edgeCut, Reversed));
+[ [ 1, 5 ], [ 2, 6 ], [ 4, 8 ], [ 3, 7 ], [ 5, 1 ], [ 6, 2 ], [ 8, 4 ], 
+  [ 7, 3 ] ]
+gap> gNew := DigraphRemoveEdges(g, edgeCut);
+<immutable digraph with 8 vertices, 16 edges>
+gap> IsConnectedDigraph(gNew);
+false
+gap> MinimalCyclicEdgeCut(CompleteDigraph(4));
+fail
+gap> MinimalCyclicEdgeCut(CycleGraph(8));
+fail
+gap> g := DigraphByEdges([[1, 2], [1, 3], [1, 7], [2, 4], [2, 9],
+>   [3, 5], [3, 10], [4, 6], [4, 7], [5, 6], [5, 7], [6, 13], [8, 9],
+>   [8, 10], [8, 14], [9, 11], [10, 12], [11, 13], [11, 14], [12, 13], [12, 14]]);;
+gap> edgeCut := MinimalCyclicEdgeCut(g);
+[ [ 2, 9 ], [ 3, 10 ], [ 6, 13 ] ]
+gap> gNew := DigraphRemoveEdges(g, edgeCut);
+<immutable digraph with 14 vertices, 18 edges>
+gap> IsConnectedDigraph(gNew);
+false
+
+# ArticulationPoints: Issue #777
+gap> D1 := DigraphFromGraph6String("LCHK?p?O?c@`?_");
+<immutable symmetric digraph with 13 vertices, 30 edges>
+gap> ArticulationPoints(D1);
+[ 2, 5, 6, 7 ]
+gap> x := (1, 4, 6, 2)(3, 7, 8, 5, 13, 11, 10, 9);;
+gap> D2 := OnDigraphs(D1, x);;
+gap> ArticulationPoints(D2) = OnSets(ArticulationPoints(D1), x);
+true
+gap> D := DigraphFromDigraph6String("&C?gG");
+<immutable digraph with 4 vertices, 3 edges>
+gap> ArticulationPoints(D);
+[ 3 ]
+gap> D := Digraph([[], [3], [1], [3], [3], [3], [3], [3], [3]]);
+<immutable digraph with 9 vertices, 8 edges>
+gap> ArticulationPoints(D);
+[ 3 ]
 
 # StrongOrientation
 gap> filename := Concatenation(DIGRAPHS_Dir(), "/data/graph5.g6.gz");;
@@ -2368,6 +2565,22 @@ true
 gap> IsChainDigraph(MaximalAntiSymmetricSubdigraph(D));
 true
 
+# DigraphRemoveAllEdges: for a digraph
+gap> gr := Digraph(IsImmutableDigraph, [[2, 3], [3], [4], []]);
+<immutable digraph with 4 vertices, 4 edges>
+gap> DigraphRemoveAllEdges(gr);
+<immutable empty digraph with 4 vertices>
+gap> gr2 := Digraph(IsMutableDigraph, [[2, 3], [3], [4], []]);
+<mutable digraph with 4 vertices, 4 edges>
+gap> DigraphRemoveAllEdges(gr2);
+<mutable empty digraph with 4 vertices>
+gap> gr3 := Digraph(IsMutableDigraph, [[], [], [], []]);
+<mutable empty digraph with 4 vertices>
+gap> DigraphRemoveAllEdges(gr3);
+<mutable empty digraph with 4 vertices>
+gap> OutNeighbours(gr3);
+[ [  ], [  ], [  ], [  ] ]
+
 # CharacteristicPolynomial
 gap> gr := Digraph([
 > [2, 2, 2], [1, 3, 6, 8, 9, 10], [4, 6, 8],
@@ -2593,14 +2806,12 @@ gap> P := DigraphRemoveAllMultipleEdges(
 > ReducedDigraph(OnDigraphs(D, proj[2])));;
 gap> IsIsomorphicDigraph(CycleDigraph(4), P);
 true
-gap> G := RandomDigraph(12);;
-gap> H := RandomDigraph(50);;
+gap> G := ReducedDigraph(RandomDigraph(12));;
+gap> H := ReducedDigraph(RandomDigraph(50));;
 gap> D := DigraphDirectProduct(G, H);;
 gap> proj := DigraphDirectProductProjections(D);;
 gap> IsIdempotent(proj[1]);
 true
-gap> RankOfTransformation(proj[2]);
-50
 gap> P := DigraphRemoveAllMultipleEdges(
 > ReducedDigraph(OnDigraphs(D, proj[2])));;
 gap> IsIsomorphicDigraph(H, P);
@@ -2936,6 +3147,146 @@ gap> D := DigraphRemoveEdge(D, 1, 3);
 gap> D := DigraphRemoveEdge(D, 1, 3);
 <immutable digraph with 6 vertices, 11 edges>
 
+# DigraphVertexConnectivity
+gap> D := Digraph([[2, 3, 4], [3, 4], [4], []]);
+<immutable digraph with 4 vertices, 6 edges>
+gap> DigraphVertexConnectivity(D);
+3
+gap> D := Digraph(IsMutableDigraph, [[2, 3, 4], [3, 4], [4], []]);
+<mutable digraph with 4 vertices, 6 edges>
+gap> DigraphVertexConnectivity(D);
+3
+gap> D = Digraph(IsMutableDigraph, [[2, 3, 4], [3, 4], [4], []]);
+true
+gap> D := Digraph([[1, 2, 3, 4], [3, 4], [4], [4]]);;
+gap> DigraphVertexConnectivity(D);
+3
+gap> D := Digraph([[2, 2, 3, 4], [3, 3, 3, 3, 4, 4, 4, 4], [4, 4, 4], []]);;
+gap> DigraphVertexConnectivity(D);
+3
+gap> D := CompleteDigraph(10);
+<immutable complete digraph with 10 vertices>
+gap> DigraphVertexConnectivity(D);
+9
+gap> ForAny(Combinations(DigraphVertices(D), 8),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+false
+gap> D := JohnsonDigraph(9, 2);
+<immutable symmetric digraph with 36 vertices, 504 edges>
+gap> DigraphVertexConnectivity(D);
+14
+gap> D := EmptyDigraph(0);
+<immutable empty digraph with 0 vertices>
+gap> DigraphVertexConnectivity(D);
+0
+gap> D := EmptyDigraph(1);
+<immutable empty digraph with 1 vertex>
+gap> DigraphVertexConnectivity(D);
+0
+gap> D := Digraph([[2, 4, 5], [1, 4], [4, 7], [1, 2, 3, 5, 6, 7],
+>                  [1, 4], [4, 7], [3, 4, 6]]);
+<immutable digraph with 7 vertices, 20 edges>
+gap> DigraphVertexConnectivity(D);
+1
+gap> not IsConnectedDigraph(D);
+false
+gap> ForAny(Combinations(DigraphVertices(D), 1),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+true
+gap> D := Digraph([[2, 4, 5], [1, 3, 4], [4, 7], [1, 2, 3, 5, 6, 7],
+>                  [1, 4], [4, 7], [3, 4, 6]]);
+<immutable digraph with 7 vertices, 21 edges>
+gap> DigraphVertexConnectivity(D);
+2
+gap> ForAny(Combinations(DigraphVertices(D), 1),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+false
+gap> ForAny(Combinations(DigraphVertices(D), 2),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+true
+gap> D := Digraph([[2, 3], [3, 5], [1, 2, 4], [2, 3], [3]]);
+<immutable digraph with 5 vertices, 10 edges>
+gap> DigraphVertexConnectivity(D);
+2
+gap> ForAny(Combinations(DigraphVertices(D), 1),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+false
+gap> ForAny(Combinations(DigraphVertices(D), 2),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+true
+gap> D := DigraphFromGraph6String("NoCQ@?EAS_C`QA?c_Kg");;
+gap> DigraphVertexConnectivity(D);
+3
+gap> ForAny(Combinations(DigraphVertices(D), 2),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+false
+gap> ForAny(Combinations(DigraphVertices(D), 3),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+true
+gap> D := DigraphFromGraph6String("HoStIv{");;
+gap> DigraphVertexConnectivity(D);
+4
+gap> ForAny(Combinations(DigraphVertices(D), 3),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+false
+gap> ForAny(Combinations(DigraphVertices(D), 4),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+true
+gap> D := PancakeGraph(4);;
+gap> ForAny(Combinations(DigraphVertices(D), 2),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+false
+gap> ForAny(Combinations(DigraphVertices(D), 3),
+> x -> not IsConnectedDigraph(InducedSubdigraph(D,
+>                               Difference(DigraphVertices(D), x))));
+true
+gap> D := DigraphFromGraph6String(
+> "Os_??L@GOS`SEKT@E`BK?");;  # House of Graphs 44091
+gap> DigraphVertexConnectivity(D);
+4
+gap> D := DigraphFromGraph6String(
+> "]s_??CD@?C_O@@?S?C_@O?O_E??_AgO@X?@?G?CI??OC?C@CA?GA?_@AA?A?OG?OG???d???@g"
+> );;  # House of Graphs 49360
+gap> DigraphVertexConnectivity(D);
+4
+gap> D := CirculantGraph(14, [1, 4, 7]);;  # House of Graphs 53516
+gap> DigraphVertexConnectivity(D);
+5
+gap> D := CirculantGraph(16, [1, 3, 8]);;  # House of Graphs 53524
+gap> DigraphVertexConnectivity(D);
+5
+gap> D := CirculantGraph(17, [1, 3, 5]);;  # House of Graphs 53527
+gap> DigraphVertexConnectivity(D);
+6
+gap> D := CirculantGraph(16, [1, 4, 7]);;  # House of Graphs 53528
+gap> DigraphVertexConnectivity(D);
+6
+gap> D := CirculantGraph(19, [3, 4, 5]);;  # House of Graphs 53529
+gap> DigraphVertexConnectivity(D);
+6
+gap> D := CirculantGraph(20, [1, 5, 8]);;  # House of Graphs 53696
+gap> DigraphVertexConnectivity(D);
+6
+gap> D := CirculantGraph(19, [1, 5, 8]);;  # House of Graphs 53697
+gap> DigraphVertexConnectivity(D);
+6
+gap> D := DigraphFromGraph6String(
+> "[~yCKMF`{~r}????`?WOFA?{OBy?VwoFL_B|Y?}r_FyM@jkH{?MF{__M}_?ZNw?E"
+> );;  # House of Graphs 33964
+gap> DigraphVertexConnectivity(D);
+7
+
 # Semimodular lattices
 gap> D := DigraphFromDigraph6String("&C[o?");
 <immutable digraph with 4 vertices, 5 edges>
@@ -3138,86 +3489,33 @@ Error, the 2nd argument <digraph2> must have at most 65534 vertices, found 655\
 # This has a small chance to randomly fail. Sorry if it does!
 gap> D1 := RandomMultiDigraph(100);;
 gap> D2 := Digraph(List(OutNeighbours(D1), x -> Shuffle(ShallowCopy(x))));;
+gap> repeat D3 := RandomMultiDigraph(100); until D1 <> D3;
 gap> D1 = D2;
 true
+gap> D1 = D3;
+false
 gap> OutNeighbours(D1) = OutNeighbours(D2);
 false
 gap> DigraphHash(D1) = DigraphHash(D2);
 true
-gap> while D1 = D2 do
-> D2 := RandomMultiDigraph(100);
-> od;;
-gap> DigraphHash(D1) = DigraphHash(D2);
+gap> DigraphHash(D1) = DigraphHash(D3);
 false
-
-# Unbind local variables, auto-generated by etc/tst-unbind-local-vars.py
-gap> Unbind(A);
-gap> Unbind(B);
-gap> Unbind(D);
-gap> Unbind(D1);
-gap> Unbind(D2);
-gap> Unbind(G);
-gap> Unbind(H);
-gap> Unbind(M);
-gap> Unbind(M1);
-gap> Unbind(P);
-gap> Unbind(S);
-gap> Unbind(a);
-gap> Unbind(adj);
-gap> Unbind(adj1);
-gap> Unbind(adj2);
-gap> Unbind(adjacencies);
-gap> Unbind(b);
-gap> Unbind(circuit);
-gap> Unbind(complete15);
-gap> Unbind(comps);
-gap> Unbind(cycle12);
-gap> Unbind(e);
-gap> Unbind(erev);
-gap> Unbind(filename);
-gap> Unbind(forest);
-gap> Unbind(g);
-gap> Unbind(gr);
-gap> Unbind(gr1);
-gap> Unbind(gr2);
-gap> Unbind(gr3);
-gap> Unbind(gr4);
-gap> Unbind(grid);
-gap> Unbind(group);
-gap> Unbind(i);
-gap> Unbind(id);
-gap> Unbind(isGraph);
-gap> Unbind(j);
-gap> Unbind(mat);
-gap> Unbind(multiple);
-gap> Unbind(names);
-gap> Unbind(nbs);
-gap> Unbind(order);
-gap> Unbind(probs);
-gap> Unbind(proj);
-gap> Unbind(r);
-gap> Unbind(rd);
-gap> Unbind(reflextrans);
-gap> Unbind(reflextrans1);
-gap> Unbind(reflextrans2);
-gap> Unbind(representatives);
-gap> Unbind(rev);
-gap> Unbind(rgr);
-gap> Unbind(scc);
-gap> Unbind(schreierVector);
-gap> Unbind(sink);
-gap> Unbind(soccer);
-gap> Unbind(str);
-gap> Unbind(temp);
-gap> Unbind(topo);
-gap> Unbind(trans);
-gap> Unbind(trans1);
-gap> Unbind(trans2);
-gap> Unbind(tree);
-gap> Unbind(wcc);
-gap> Unbind(x);
-gap> Unbind(y);
-gap> Unbind(z);
+gap> table := SparseHashTable();;  # DigraphHash should be used for this
+gap> AddDictionary(table, D1);
+gap> LookupDictionary(table, D1);
+true
+gap> LookupDictionary(table, D2);
+true
+gap> LookupDictionary(table, D3);
+fail
+gap> table := HTCreate(Digraph([]));;  # DigraphHash should be used for this too
+gap> HTAdd(table, D1, "first digraph");;
+gap> HTValue(table, D1);
+"first digraph"
+gap> HTValue(table, D2);
+"first digraph"
+gap> HTValue(table, D3);
+fail
 
 #
 gap> DIGRAPHS_StopTest();

@@ -1,13 +1,13 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4763272.svg)](https://doi.org/10.5281/zenodo.4763272)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/digraphs/digraphs/master)
-[![Build status](https://github.com/digraphs/Digraphs/workflows/CI/badge.svg?branch=master)](https://github.com/digraphs/Digraphs/actions?query=workflow%3ACI+branch%3Amaster)
-[![Code coverage](https://codecov.io/gh/digraphs/Digraphs/branch/master/graphs/badge.svg)](https://codecov.io/gh/digraphs/Digraphs/branch/master)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.596465.svg)](https://doi.org/10.5281/zenodo.596465)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/digraphs/digraphs/main)
+[![Build status](https://github.com/digraphs/Digraphs/actions/workflows/ubuntu.yml/badge.svg?branch=main)](https://github.com/digraphs/Digraphs/actions?query=workflow%3Aubuntu+branch%3Amain)
+[![Code coverage](https://codecov.io/gh/digraphs/Digraphs/branch/main/graphs/badge.svg)](https://codecov.io/gh/digraphs/Digraphs/branch/main)
 
 ## README
 
 ### Digraphs package for GAP
 
-#### Copyright (C) 2014-21 by Jan De Beule, Julius Jonušas, James D. Mitchell, Wilf A. Wilson, Michael Young et al.
+#### Copyright (C) 2014-25 by Jan De Beule, Julius Jonušas, James D. Mitchell, Wilf A. Wilson, Michael Young et al.
 ## Getting Digraphs
 
 To get the latest version of the package, download the archive file
@@ -27,7 +27,7 @@ For questions, remarks, suggestions, and issues please use the
 ## Installation
 
 It is assumed that you have a working copy of [GAP][] with version number
-4.10.0 or higher.  The most up-to-date version of GAP, and instructions on how
+4.11.0 or higher.  The most up-to-date version of GAP, and instructions on how
 to install it, can be obtained from the 
 [main GAP webpage](https://www.gap-system.org).
 

@@ -31,6 +31,11 @@
     <#Include Label="EdgeWeightedDigraphMinimumSpanningTree">
     <#Include Label="EdgeWeightedDigraphShortestPaths">
     <#Include Label="EdgeWeightedDigraphShortestPath">
+    <#Include Label="DigraphMaximumFlow">
+    <#Include Label="DigraphMinimumCut">
+    <#Include Label="DigraphMinimumCutSet">
+    <#Include Label="RandomUniqueEdgeWeightedDigraph">
+    <#Include Label="DotEdgeWeightedDigraph">
   </Section>
 
   <Section><Heading>Orders</Heading>
@@ -76,6 +81,8 @@
     <#Include Label="IsDigraphCore">
     <#Include Label="IsEdgeTransitive">
     <#Include Label="IsVertexTransitive">
+    <#Include Label="Is2EdgeTransitive">
+    <#Include Label="IsCograph">
   </Section>
 
   

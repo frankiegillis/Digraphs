@@ -7,6 +7,9 @@
 ##
 #############################################################################
 ##
+
+#@local D, adjacencies, digraph, gens, gr, gr1, gr2, gr3, group, isGraph, names
+#@local order, representatives, schreierVector
 gap> START_TEST("Digraphs package: standard/grape.tst");
 gap> LoadPackage("digraphs", false);;
 
@@ -26,6 +29,13 @@ true
 gap> ForAll(DigraphEdges(digraph), e -> AsList(group)[e[1]]
 > * DigraphEdgeLabel(digraph, e[1], e[2]) = AsList(group)[e[2]]);
 true
+gap> digraph := CayleyDigraph(IsMutableDigraph, group);
+<mutable digraph with 8 vertices, 24 edges>
+gap> digraph := CayleyDigraph(IsMutableDigraph, FreeGroup(1));
+Error, the 2nd argument (a group) must be finite
+gap> digraph := CayleyDigraph(IsMutableDigraph, group, [(2, 3)]);
+Error, the 3rd argument (a homog. list) must consist of elements of the 2nd ar\
+gument (a group)
 gap> group := DihedralGroup(IsPermGroup, 8);
 Group([ (1,2,3,4), (2,4) ])
 gap> digraph := CayleyDigraph(group);
@@ -41,10 +51,11 @@ true
 gap> GeneratorsOfCayleyDigraph(digraph);
 [ () ]
 gap> digraph := CayleyDigraph(group, [(1, 2, 3, 4), (2, 5)]);
-Error, the 2nd argument <gens> must consist of elements of the 1st argument,
+Error, the 3rd argument (a homog. list) must consist of elements of the 2nd ar\
+gument (a list)
 gap> group := FreeGroup(2);;
 gap> digraph := CayleyDigraph(group);
-Error, the 1st argument <G> must be a finite group,
+Error, the 2nd argument (a group) must be finite
 
 #  CayleyDigraph: check edge labels
 #
@@ -260,15 +271,22 @@ gap> if DIGRAPHS_IsGrapeLoaded() then
 gap> Digraph(SymmetricGroup(3), [1, 2, 3], OnPoints, {x, y} -> x <> y);
 <immutable digraph with 3 vertices, 6 edges>
 
-#  DIGRAPHS_UnbindVariables
-gap> Unbind(D);
-gap> Unbind(digraph);
-gap> Unbind(gens);
-gap> Unbind(gr);
-gap> Unbind(gr1);
-gap> Unbind(gr2);
-gap> Unbind(gr3);
-gap> Unbind(group);
+#
+gap> Digraph(IsSemigroup, SymmetricGroup(3), [1, 2, 3], OnPoints, 
+> {x, y} -> x <> y);
+Error, <imm> must be IsMutableDigraph or IsImmutableDigraph
+
+# Code coverage
+gap> D := Digraph([[1, 1]]);
+<immutable multidigraph with 1 vertex, 2 edges>
+gap> Graph(D);
+rec( adjacencies := [ [ 1 ] ], group := Group(()), isGraph := true, 
+  names := [ 1 ], order := 1, representatives := [ 1 ], 
+  schreierVector := [ -1 ] )
+gap> D := CompleteDigraph(IsMutableDigraph, 5);;
+gap> HasDigraphGroup(D);
+false
+gap> Graph(D);;
 
 #
 gap> DIGRAPHS_StopTest();

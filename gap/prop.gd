@@ -30,6 +30,7 @@ DeclareProperty("IsChainDigraph", IsDigraph);
 DeclareProperty("IsCycleDigraph", IsDigraph);
 DeclareProperty("IsDigraphCore", IsDigraph);
 DeclareProperty("IsDirectedTree", IsDigraph);
+DeclareProperty("IsDirectedForest", IsDigraph);
 DeclareProperty("IsUndirectedTree", IsDigraph);
 DeclareProperty("IsUndirectedForest", IsDigraph);
 DeclareProperty("IsEdgeTransitive", IsDigraph);
@@ -52,7 +53,8 @@ DeclareProperty("IsMeetSemilatticeDigraph", IsDigraph);
 DeclareProperty("IsPermutationDigraph", IsDigraph);
 DeclareProperty("IsDistributiveLatticeDigraph", IsDigraph);
 DeclareProperty("IsModularLatticeDigraph", IsDigraph);
-DeclareProperty("IsTwoEdgeTransitive", IsDigraph);
+DeclareProperty("Is2EdgeTransitive", IsDigraph);
+DeclareProperty("IsCograph", IsDigraph);
 DeclareSynonymAttr("IsLatticeDigraph",
                    IsMeetSemilatticeDigraph and IsJoinSemilatticeDigraph);
 DeclareSynonymAttr("IsPreorderDigraph",
@@ -69,6 +71,7 @@ DeclareSynonymAttr("IsEquivalenceDigraph",
 DeclareSynonymAttr("IsAntiSymmetricDigraph", IsAntisymmetricDigraph);
 DeclareSynonymAttr("IsNullDigraph", IsEmptyDigraph);
 DeclareSynonymAttr("IsQuasiorderDigraph", IsPreorderDigraph);
+DeclareSynonymAttr("IsTwoEdgeTransitive", Is2EdgeTransitive);
 
 DeclareOperation("DIGRAPHS_IsJoinSemilatticeAndJoinTable", [IsDigraph]);
 DeclareOperation("DIGRAPHS_IsMeetSemilatticeAndMeetTable", [IsDigraph]);
@@ -104,12 +107,17 @@ InstallTrueMethod(IsStronglyConnectedDigraph, IsDigraph and IsUndirectedTree);
 InstallTrueMethod(IsSymmetricDigraph, IsCompleteDigraph);
 InstallTrueMethod(IsSymmetricDigraph, IsDigraph and IsUndirectedForest);
 InstallTrueMethod(IsTransitiveDigraph, IsTournament and IsAcyclicDigraph);
+InstallTrueMethod(IsDirectedForest, IsDigraph and IsDirectedTree);
+InstallTrueMethod(IsDirectedTree,
+                  IsDigraph and IsDirectedForest and IsConnectedDigraph);
 InstallTrueMethod(IsUndirectedForest, IsDigraph and IsUndirectedTree);
+InstallTrueMethod(IsUndirectedTree,
+                  IsDigraph and IsUndirectedForest and IsConnectedDigraph);
 
 InstallTrueMethod(IsNonemptyDigraph, IsDigraph and DigraphHasLoops);
 InstallTrueMethod(DigraphHasLoops, IsReflexiveDigraph and DigraphHasAVertex);
 InstallTrueMethod(DigraphHasAVertex, IsDigraph and IsNonemptyDigraph);
-InstallTrueMethod(DigraphHasAVertex, IsDigraph and IsDirectedTree);
+InstallTrueMethod(DigraphHasAVertex, IsDigraph and IsDirectedForest);
 
 # Implications that something is false
 

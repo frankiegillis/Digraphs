@@ -8,6 +8,69 @@
 #############################################################################
 ##
 
+<#GAPDoc Label="DigraphKings">
+<ManSection>
+  <Oper Name="DigraphKings" Arg="D, n"/>
+  <Returns>A list.</Returns>
+  <Description>
+    If <A>D</A> is a tournament, then this operation returns a list of the
+    <A>n</A>-kings in the tournament (see <Ref Oper="DigraphIsKing"/>).<P/>
+
+    If <A>D</A> is not tournament, then an error is given
+    (see <Ref Prop="IsTournament"/>).
+
+    If the tournament contains a source, then the source is the only 2-king
+    (see <Ref Attr="DigraphSources"/>). The number of 2-kings in a tournament
+    without a source is at least three. A tournament cannot have exactly two
+    2-kings.
+
+    <Example><![CDATA[
+gap> gr := Digraph([[2, 3, 4], [3, 5], [5], [2, 3], [1, 4]]);
+<immutable digraph with 5 vertices, 10 edges>
+gap> DigraphKings(gr, 2);
+[ 1, 2, 5 ]
+gap> gr := Digraph([[2, 3, 4, 5], [3, 5], [5], [2, 3], [4]]);
+<immutable digraph with 5 vertices, 10 edges>
+gap> DigraphSources(gr);
+[ 1 ]
+gap> DigraphKings(gr, 2);
+[ 1 ]]]></Example>
+  </Description>
+</ManSection>
+<#/GAPDoc>
+
+<#GAPDoc Label="DigraphIsKing">
+<ManSection>
+  <Oper Name="DigraphIsKing" Arg="D, v, k"/>
+  <Returns><K>true</K> or <K>false</K>.</Returns>
+  <Description>
+    If <A>D</A> is a tournament and <A>v</A> is a vertex in the tournament,
+    then this operation returns <K>true</K> if every other vertex of <A>D</A>
+    is reachable from <A>v</A> by a path of length at most <A>k</A>. Otherwise,
+    an error is given.
+
+    If <K>true</K> is returned, then the vertex, <A>v</A>, is a <A>k</A>-king.
+    <P/>
+
+    <Example><![CDATA[
+gap> gr := Digraph([[2, 3, 4], [3, 5], [5], [2, 3], [1, 4]]);
+<immutable digraph with 5 vertices, 10 edges>
+gap> DigraphIsKing(gr, 2, 2);
+true
+gap> DigraphIsKing(gr, 3, 2);
+false
+gap> OutNeighboursOfVertex(gr, 3);
+[ 5 ]
+gap> OutNeighboursOfVertex(gr, 5);
+[ 1, 4 ]
+gap> Union(last, last2);
+[ 1, 4, 5 ]
+gap> DigraphIsKing(gr, 3, 4);
+true]]></Example>
+  </Description>
+</ManSection>
+<#/GAPDoc>
+
 <#GAPDoc Label="IsSubdigraph">
 <ManSection>
   <Oper Name="IsSubdigraph" Arg="super, sub"/>
@@ -185,6 +248,8 @@ true
     with <C>OnDigraphs(<A>digraph</A>, AsPermutation(<A>trans</A>))</C>.
     <P/>
 
+    Note: <C>OnDigraphs</C> for a digraph and a permutation or transformation can also be used via the <C>\^</C> operator. <P/>
+
     The <Ref Oper="DigraphVertexLabels"/> of <A>digraph</A> will not be retained
     in the returned digraph. <P/>
 
@@ -209,6 +274,48 @@ gap> OutNeighbours(new);
 [ [ 2, 2 ], [  ], [  ] ]
 gap> ForAll(DigraphEdges(D),
 >  e -> IsDigraphEdge(new, [e[1] ^ t, e[2] ^ t]));
+true
+]]></Example>
+  </Description>
+</ManSection>
+<#/GAPDoc>
+
+<#GAPDoc Label="\^OperatorOnDigraphs">
+<ManSection>
+  <Oper Name="\^" Arg="digraph, permOrTrans" Label="for a digraph and a permutation or transformation"/>
+  <Returns>A digraph.</Returns>
+  <Description>
+    The <C>^</C> operator acts on digraphs with either a permutation or a transformation.
+    For a digraph <A>digraph</A> and a permutation <A>perm</A>,
+    <C>digraph ^ perm</C> gives the same result as
+    <C>OnDigraphs(digraph, perm)</C> — a digraph whose vertices have been relabelled according to the permutation. <P/>
+
+    Similarly, if the second argument is a transformation <A>trans</A>,
+    then <C>digraph ^ trans</C> calls <C>OnDigraphs(digraph, trans)</C>.
+    This allows a simple way to apply vertex relabelling or transformations directly using the <C>^</C> symbol. <P/>
+
+    <Example><![CDATA[
+gap> D := CycleDigraph(5);
+<immutable cycle digraph with 5 vertices>
+gap> p := (1, 5)(2, 4);;
+gap> D ^ p = DigraphReverse(D);
+true
+gap> OnDigraphs(D, p) = D ^ p;
+true
+gap> idp := ();;
+gap> D ^ idp = D;
+true
+gap> q := (1, 2, 3, 4, 5);;
+gap> (D ^ q) ^ (q ^ -1) = D;
+true
+gap> t := Transformation([2, 3, 4, 5, 1]);;
+gap> D ^ t = OnDigraphs(D, t);
+true
+gap> idt := Transformation([1, 2, 3, 4, 5]);;
+gap> D ^ idt = D;
+true
+gap> M := DigraphMutableCopy(D);;
+gap> M ^ p = OnDigraphs(M, p);
 true
 ]]></Example>
   </Description>
@@ -1499,7 +1606,7 @@ false
 gap> DigraphShortestPathSpanningTree(D, 1);
 fail
 gap> tree := DigraphShortestPathSpanningTree(D, 5);
-<immutable directed tree digraph with 5 vertices>
+<immutable directed tree with 5 vertices>
 gap> OutNeighbours(tree);
 [ [  ], [ 3 ], [  ], [ 1 ], [ 2, 4 ] ]
 gap> ForAll(DigraphVertices(D), v ->
@@ -2228,6 +2335,29 @@ gap> HomomorphicProduct(D1, D2);
 </ManSection>
 <#/GAPDoc>
 
+<#GAPDoc Label="SwapDigraphs">
+<ManSection>
+  <Oper Name="SwapDigraphs" Arg="D1, D2"/>
+  <Description>
+  If <A>D1</A> and <A>D2</A> are mutable digraphs,
+  then <C>SwapDigraphs</C> will swap the contents of
+  <A>D1</A> and <A>D2</A>.
+
+  <Example><![CDATA[
+gap> D1 := Digraph(IsMutableDigraph, [[4], [5], [1, 2], [], []]);
+<mutable digraph with 5 vertices, 4 edges>
+gap> D2 := Digraph(IsMutableDigraph, [[2, 3, 4], [1, 3, 4, 5], [1, 2], [5], [4]]);
+<mutable digraph with 5 vertices, 11 edges>
+gap> SwapDigraphs(D1, D2);
+gap> OutNeighbours(D2);
+[ [ 4 ], [ 5 ], [ 1, 2 ], [  ], [  ] ]
+gap> OutNeighbours(D1);
+[ [ 2, 3, 4 ], [ 1, 3, 4, 5 ], [ 1, 2 ], [ 5 ], [ 4 ] ]
+]]></Example>
+</Description>
+</ManSection>
+<#/GAPDoc> 
+
 <#GAPDoc Label="LexicographicProduct">
 <ManSection>
   <Oper Name="LexicographicProduct" Arg="D1, D2"/>
@@ -2488,4 +2618,49 @@ true]]>
   <Example><![CDATA[
   gap> DIGRAPHS_FREE_CLIQUES_DATA();
   ]]></Example>
+<#/GAPDoc>
+
+<#GAPDoc Label="DigraphColourRefinement">
+<ManSection>
+  <Oper Name="DigraphColourRefinement"
+        Arg="digraph"
+        Label="for a digraph"/>
+  <Returns>A list of integers.</Returns>
+  <Description>
+    Colour refinement is a method of colouring a digraph such that it has a 'stable colouring'. That is, for a 
+    colour, every node with that colour has an identical configuration of coloured neighbours. This means that 
+    all nodes with the same colour have equal numbers of neighbours of each colour.
+    <C>DigraphColourRefinement</C> considers the out-neighbours and in-neighbours of a node separately,
+    meaning the nodes of a certain colour must have an equal number of out-neighbours of each colour, 
+    and an equal number of in-neighbours of each colour. 
+    <P/>
+    <C>DigraphColourRefinement</C> returns the colouring as a list where the value at the ith position is the 
+    colour of node i. The time complexity of this algorithm is <M>O(n^2 log n)</M>.
+    <P/>
+    Because the labels of the vertices are not used in any capacity during the refinement process (i.e. to 
+    determine which cells to refine), the colouring produced is canonical. This means that for two isomorphic 
+    digraphs, they would produce the same colouring. Identical colourings do not necessarily prove that two 
+    digraphs are isomorphic, but non-identical colourings would prove that they aren't. While the colouring 
+    produced for two isomorphic digraphs will be identical, the output of <C>DigraphColourRefinement</C> will not,
+    as the list produced is ordered by vertex labels. This is demonstrated in the examples below.
+    <P/>
+    See also
+    <Ref Oper="DigraphColouring"
+         Label="for a digraph and a number of colours"/>.
+    <P/>
+
+    <Example><![CDATA[
+gap> D := Digraph([[3], [], [1, 9], [], [10], [7, 8, 9], [6, 8],
+> [6, 7], [3, 6, 10], [5, 9]]);;
+gap> DigraphColourRefinement(D);
+[ 2, 1, 4, 1, 2, 5, 3, 3, 6, 4 ]
+gap> D2 := Digraph([[6, 7], [], [8, 9], [], [10], [1, 7, 9], [6, 1],
+> [3], [3, 6, 10], [5, 9]]);;
+gap> DigraphColourRefinement(D2);
+[ 3, 1, 4, 1, 2, 5, 3, 2, 6, 4 ]
+gap> DigraphColourRefinement(Digraph([[], [1], [1], [1]]));
+[ 1, 2, 2, 2 ]
+]]></Example>
+  </Description>
+</ManSection>
 <#/GAPDoc>

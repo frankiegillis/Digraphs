@@ -7,6 +7,17 @@
 ##
 #############################################################################
 ##
+
+#@local D, D1, D2
+#@local G, G1, G2, G3, G4, G5, S, T, U, adj
+#@local adjacencies, b, bin, c, c1, c2, d, di, digraph, divides, elms, eq
+#@local eq_distr, eq_new, error, f, failed, failed_names, failed_values, foo, g
+#@local gr, gr1, gr2, gr3, gr4, gr5, graph, graph1, graph2, grnc, group, h
+#@local hom13, hom21, hom23, hom31, hom41, hom42, hom52, hom53, i, idhom, im
+#@local inn, isGraph, iso, iso_distr, iso_new, j, k, list, m, main, mat, n, name
+#@local name2, names, new, order, p, prop, properties, r, r1, r2, record, rel1
+#@local rel2, rel3, representatives, s, schreierVector, sgn, swaphom, temp
+#@local test, v, x, xxx, y
 gap> START_TEST("Digraphs package: standard/digraph.tst");
 gap> LoadPackage("digraphs", false);;
 
@@ -1504,6 +1515,9 @@ Error, no 2nd choice method found for `AsSemigroup' on 2 arguments
 gap> S := AsMonoid(IsTransformation, di);;
 Error, the 1st argument <filt> must be IsPartialPermMonoid or IsPartialPermSem\
 igroup,
+gap> AsSemigroup(IsTransformationSemigroup, ChainDigraph(3), [], []);
+Error, no method found! For debugging hints type ?Recovery from NoMethodFound
+Error, no 2nd choice method found for `AsSemigroup' on 4 arguments
 
 # AsSemigroup (for IsPartialPermSemigroup, a digraph, a list of groups,
 # and homomorphisms)
@@ -1567,6 +1581,9 @@ gap> Size(T);
 24
 gap> Size(GreensHClassOfElement(T, Representative(T)));
 24
+gap> T := AsSemigroup(IsPartialPermSemigroup, gr3, [Group(())], []);;
+gap> Size(T);
+1
 gap> gr4 := Digraph([[1], [1, 2], [1, 3], [1, 4], [1, 2, 3, 5]]);;
 gap> G5 := AlternatingGroup(4);;
 gap> G2 := SymmetricGroup(4);;
@@ -1660,6 +1677,18 @@ gap> T := AsSemigroup(IsPartialPermSemigroup, gr4, [G1, G2, G3, G4, G5],
 > [[2, 1, hom21], [3, 1, hom31], [4, 1, hom41], [5, 2, hom52], [5, 2, hom52]]);;
 Error, the fourth argument must contain a triple [i, j, hom] for each edge [i,\
  j] in the reflexive transitive reduction of the second argument,
+gap> D := Digraph([[1, 2, 3, 4], [2, 4], [3, 4], [4]]);;
+gap> OutNeighbours(DigraphReflexiveTransitiveReduction(D));
+[ [ 2, 3 ], [ 4 ], [ 4 ], [  ] ]
+gap> G := SymmetricGroup(4);;
+gap> idhom := GroupHomomorphismByFunction(G, G, IdFunc);;
+gap> swaphom := GroupHomomorphismByFunction(G, G, x -> x ^ (1, 2));;
+gap> T := AsSemigroup(IsPartialPermSemigroup, D, [G, G, G, G],
+> [[1, 2, idhom], [1, 3, swaphom], [2, 4, idhom], [3, 4, swaphom]]);
+<partial perm semigroup of rank 16 with 8 generators>
+gap> T := AsSemigroup(IsPartialPermSemigroup, D, [G, G, G, G],
+> [[1, 2, idhom], [1, 3, swaphom], [2, 4, idhom], [3, 4, idhom]]);
+Error, the homomorphisms given must form a commutative diagram,
 
 # MakeImmutable
 gap> D := NullDigraph(IsMutableDigraph, 10);
@@ -2058,82 +2087,6 @@ gap> graph := RandomDigraph(IsEulerianDigraph, 10);;
 >   if not IsEulerianDigraph(graph) then
 >     Print("False");
 >   fi;
-
-#  DIGRAPHS_UnbindVariables
-gap> Unbind(D);
-gap> Unbind(D1);
-gap> Unbind(D2);
-gap> Unbind(G);
-gap> Unbind(G1);
-gap> Unbind(G2);
-gap> Unbind(G3);
-gap> Unbind(G4);
-gap> Unbind(G5);
-gap> Unbind(S);
-gap> Unbind(T);
-gap> Unbind(U);
-gap> Unbind(adj);
-gap> Unbind(b);
-gap> Unbind(bin);
-gap> Unbind(d);
-gap> Unbind(di);
-gap> Unbind(digraph);
-gap> Unbind(divides);
-gap> Unbind(elms);
-gap> Unbind(eq);
-gap> Unbind(error);
-gap> Unbind(f);
-gap> Unbind(failed);
-gap> Unbind(foo);
-gap> Unbind(g);
-gap> Unbind(gr);
-gap> Unbind(gr1);
-gap> Unbind(gr2);
-gap> Unbind(gr3);
-gap> Unbind(gr4);
-gap> Unbind(gr5);
-gap> Unbind(graph);
-gap> Unbind(graph1);
-gap> Unbind(graph2);
-gap> Unbind(grnc);
-gap> Unbind(h);
-gap> Unbind(hom13);
-gap> Unbind(hom21);
-gap> Unbind(hom23);
-gap> Unbind(hom31);
-gap> Unbind(hom41);
-gap> Unbind(hom42);
-gap> Unbind(hom52);
-gap> Unbind(hom53);
-gap> Unbind(i);
-gap> Unbind(im);
-gap> Unbind(inn);
-gap> Unbind(iso);
-gap> Unbind(j);
-gap> Unbind(list);
-gap> Unbind(m);
-gap> Unbind(main);
-gap> Unbind(mat);
-gap> Unbind(n);
-gap> Unbind(name);
-gap> Unbind(names);
-gap> Unbind(new);
-gap> Unbind(p);
-gap> Unbind(prop);
-gap> Unbind(r);
-gap> Unbind(r1);
-gap> Unbind(r2);
-gap> Unbind(record);
-gap> Unbind(rel1);
-gap> Unbind(rel2);
-gap> Unbind(rel3);
-gap> Unbind(s);
-gap> Unbind(sgn);
-gap> Unbind(temp);
-gap> Unbind(test);
-gap> Unbind(v);
-gap> Unbind(x);
-gap> Unbind(y);
 
 #
 gap> DIGRAPHS_StopTest();
