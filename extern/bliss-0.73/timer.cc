@@ -1,5 +1,4 @@
-#include <unistd.h>
-#include <sys/times.h>
+#include <time.h>
 #include "timer.hh"
 
 /*
@@ -32,7 +31,7 @@
 
 namespace bliss_digraphs {
 
-static const double numTicksPerSec = (double)(sysconf(_SC_CLK_TCK));
+static const double numTicksPerSec = (double)CLOCKS_PER_SEC;
 
 Timer::Timer()
 {
@@ -41,23 +40,13 @@ Timer::Timer()
 
 void Timer::reset()
 {
-  struct tms clkticks;
-
-//  times(&clkticks);
-  start_time =
-    ((double) clkticks.tms_utime + (double) clkticks.tms_stime) /
-    numTicksPerSec;
+  start_time = (double)clock() / numTicksPerSec;
 }
 
 
 double Timer::get_duration()
 {
-  struct tms clkticks;
-
-//  times(&clkticks);
-  double intermediate =
-    ((double) clkticks.tms_utime + (double) clkticks.tms_stime) /
-    numTicksPerSec;
+  double intermediate = (double)clock() / numTicksPerSec;
   return intermediate - start_time;
 }
 

@@ -8,6 +8,9 @@
 #############################################################################
 ##
 LoadPackage("digraphs", false);;
+# DigraphsTestManualExamples extracts the examples from the manual,
+# which needs GAPDoc; it is only a suggested package of Digraphs.
+LoadPackage("GAPDoc", false);;
 if SizeBlist([DigraphsTestInstall(),
               DigraphsTestStandard(rec(earlyStop := false)),
               DIGRAPHS_RunTest(DigraphsTestManualExamples)]) = 3 then
