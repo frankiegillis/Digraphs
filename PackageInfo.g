@@ -31,15 +31,11 @@ _STANDREWSMATHS := Concatenation(["Mathematical Institute, North Haugh, ",
 _STANDREWSCS := Concatenation(["Jack Cole Building, North Haugh, ",
                                "St Andrews, Fife, KY16 9SX, Scotland"]);
 
-if not CompareVersionNumbers(GAPInfo.Version, "4.12") then
-  IsKernelExtensionAvailable := fail;
-fi;
-
 SetPackageInfo(rec(
 PackageName := "Digraphs",
 Subtitle := "Graphs, digraphs, and multidigraphs in GAP",
-Version := "1.14.0",
-Date := "22/01/2026",  # dd/mm/yyyy format
+Version := "1.15.0",
+Date := "06/07/2026",  # dd/mm/yyyy format
 License := "GPL-3.0-or-later",
 ArchiveFormats := ".tar.gz",
 
@@ -497,6 +493,14 @@ Persons := [
     GithubUsername := "bspiers"),
 
   rec(
+    LastName       := "Thakur",
+    FirstNames     := "Anuj",
+    IsAuthor       := true,
+    IsMaintainer   := false,
+    Email          := "anujthakur@berkeley.edu",
+    GithubUsername := "anujthak"),
+
+  rec(
     LastName       := "Tsalakou",
     FirstNames     := "Maria",
     IsAuthor       := true,
@@ -568,7 +572,7 @@ PackageDoc := rec(
 ),
 
 Dependencies := rec(
-  GAP := ">=4.11.0",
+  GAP := ">=4.13.0",
   NeededOtherPackages := [["IO", ">=4.5.1"],
                           ["orb", ">=4.8.2"],
                           ["datastructures", ">=0.2.5"]],
@@ -607,26 +611,16 @@ BannerString := Concatenation(
   "-----------------------------------------------------------------------",
   "------\n"),
 
-AvailabilityTest := function()
-  local digraphs_so;
+Extensions := [
+  rec(needed   := [["NautyTracesInterface", ">=0.2"]],
+      filename := "gap/nauty.g")],
 
-  if CompareVersionNumbers(GAPInfo.Version, "4.12") then
-    if not IsKernelExtensionAvailable("digraphs") then
-      LogPackageLoadingMessage(PACKAGE_WARNING,
-                              ["the kernel module is not compiled, ",
-                               "the package cannot be loaded."]);
-      return fail;
-    fi;
-  else
-    # TODO this clause can be removed once Digraphs requires GAP>=4.12.1
-    digraphs_so := Filename(DirectoriesPackagePrograms("digraphs"),
-                            "digraphs.so");
-    if (not "digraphs" in SHOW_STAT()) and digraphs_so = fail then
-       LogPackageLoadingMessage(PACKAGE_WARNING,
-                                ["the kernel module is not compiled, ",
-                                 "the package cannot be loaded."]);
-      return fail;
-    fi;
+AvailabilityTest := function()
+  if not IsKernelExtensionAvailable("digraphs") then
+    LogPackageLoadingMessage(PACKAGE_WARNING,
+                             ["the kernel module is not compiled, ",
+                              "the package cannot be loaded."]);
+    return fail;
   fi;
   return true;
 end,
@@ -664,10 +658,6 @@ AutoDoc := rec(
             ~.AutoDoc.TitlePage.Abstract,
             "&Digraphs;", "<Strong>Digraphs</Strong>"),
             "&GAP;", "<Strong>GAP</Strong>")));
-
-if not CompareVersionNumbers(GAPInfo.Version, "4.12") then
-  Unbind(IsKernelExtensionAvailable);
-fi;
 
 MakeReadWriteGlobal("_RecogsFunnyWWWURLFunction");
 MakeReadWriteGlobal("_RecogsFunnyNameFormatterFunction");
